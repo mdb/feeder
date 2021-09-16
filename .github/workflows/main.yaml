@@ -1,24 +1,23 @@
-name: RSS
+name: Generate Feed
 
-on:
-  schedule:
-    - cron: "0 17 * * *"
+on: [ push ]
+  #schedule:
+  #  - cron: "0 17 * * *"
 
 jobs:
-  generate_rss:
+  generate-feed-json:
     runs-on: ubuntu-latest
-    name: Generate RSS
+    name: Generate Feed
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: RSS
-        id: rss
-        uses: katydecorah/instagram-rss-action@v0.2.0
-        with:
-          yourInstagram: clapclapexcitement
-          listOfInstagrams: clapclapexcitement
-      - name: Commit files
-        if: ${{ success() && steps.rss.outputs.RSS_STATUS == 'success' }}
+      - name: Fetch Feed
+        id: feed
+        run: |
+          npm install
+          ${{ secrets.IG_ACCESS_TOKEN }} npm start
+      - name: Commit instagram.json
+        if: ${{ success() }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
