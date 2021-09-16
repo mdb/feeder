@@ -1,4 +1,4 @@
-name: Generate Feed
+name: generate-instagram-feed
 
 on: [ push ]
   #schedule:
@@ -7,11 +7,11 @@ on: [ push ]
 jobs:
   generate-feed-json:
     runs-on: ubuntu-latest
-    name: Generate Feed
+    name: generate-feed
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Fetch Feed
+      - name: fetch instagram.json
         id: feed
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
