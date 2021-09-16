@@ -18,10 +18,27 @@ jobs:
         run: |
           npm install
           npm start
-      - name: Commit instagram.json
-        if: ${{ success() }}
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A && git commit -m "Updated instagram.json"
-          git push "https://${GITHUB_ACTOR}:${{secrets.GITHUB_TOKEN}}@github.com/${GITHUB_REPOSITORY}.git" HEAD:gh-pages
+      - name: upload instagram.json
+        uses: actions/upload-artifact@v2
+        with:
+          name: instagram.json
+          path: instagram.json
+          retention-days: 1
+
+  publish-feed-json-to-gh-pages:
+    needs: generate-feed-json
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+      - name: download instagram.json
+        uses: actions/download-artifact@v2
+        with:
+          name: instagram.json
+          path: instagram.json
+      - name: commit and push instagram.json to gh-pages branch
+        uses: mikeal/publish-to-github-action@923d6a6f64c943c0f82f81180c4a84d8e0edaa3e
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: gh-pages
