@@ -6,39 +6,39 @@ on:
     - cron: 0 0 * * *
 
 jobs:
-  generate-feed-json:
+  generate-json:
     runs-on: ubuntu-latest
-    name: generate-feed
+    name: generate-json
     steps:
-      - name: Checkout
+      - name: checkout
         uses: actions/checkout@v2
-      - name: fetch instagram.json
+      - name: fetch-json
         id: feed
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
         run: |
           npm install
           npm start
-      - name: upload instagram.json
+      - name: upload-json
         uses: actions/upload-artifact@v2
         with:
-          name: instagram.json
-          path: instagram.json
+          name: ig
+          path: media.json
           retention-days: 1
 
-  publish-feed-json-to-gh-pages:
-    needs: generate-feed-json
+  publish-json-to-gh-pages:
+    needs: generate-json
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
           ref: gh-pages
-      - name: download instagram.json
+      - name: download-json
         uses: actions/download-artifact@v2
         with:
-          name: instagram.json
-          path: instagram.json
-      - name: commit and push instagram.json to gh-pages branch
+          name: ig
+          path: ig
+      - name: publish-json-to-gh-pages
         uses: mikeal/publish-to-github-action@923d6a6f64c943c0f82f81180c4a84d8e0edaa3e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

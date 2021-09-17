@@ -18,7 +18,7 @@ async function getRecentMedia() {
     process.exit(1)
   }
 
-  await fsPromises.writeFile('instagram.json', JSON.stringify(result.data.data));
+  await fsPromises.writeFile('media.json', JSON.stringify(result.data.data));
 }
 
 getRecentMedia();
