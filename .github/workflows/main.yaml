@@ -1,8 +1,9 @@
 name: generate-instagram-feed
 
-on: [ push ]
-  #schedule:
-  #  - cron: "0 17 * * *"
+on:
+  push:
+  schedule:
+    - cron: 0 0 * * *
 
 jobs:
   generate-feed-json:
