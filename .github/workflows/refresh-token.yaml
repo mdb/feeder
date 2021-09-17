@@ -1,0 +1,24 @@
+name: refresh-ig-access-token
+
+on:
+  push:
+  schedule:
+    - cron: 0 0 * * *
+
+jobs:
+  refresh-token:
+    runs-on: ubuntu-latest
+    name: refresh-token
+    steps:
+      - uses: actions/checkout@v2
+      #- name: refresh-ig-access-token
+      #  id: instagram
+      #  uses: ./node_modules/@saulhardman/refresh-instagram-access-token
+      #  with:
+      #    access_token: ${{ secrets.IG_ACCESS_TOKEN }}
+      - name: update-gh-secret
+        uses: hmanzur/actions-set-secret@v2.0.0
+        with:
+          name: NEW_IG_TOKEN
+          value: foo
+          token: ${{ secrets.GITHUB_TOKEN }}
