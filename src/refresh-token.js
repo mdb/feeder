@@ -1,26 +1,8 @@
 const core = require('@actions/core');
 const axios = require('axios');
+const handleError = require('./handle-error');
 
-const handleAxiosError = (error) => {
-  if (error.response) {
-    const {
-      data: {
-        error: { message },
-      },
-      status,
-    } = error.response;
-
-    return `${status} ${message}`;
-  }
-
-  if (error.request) {
-    return 'No response received';
-  }
-
-  return error.message;
-};
-
-const run = async () => {
+const refreshToken = async () => {
   try {
     const accessToken = core.getInput('access_token', { required: true });
 
@@ -39,12 +21,12 @@ const run = async () => {
     core.setSecret(refreshedAccessToken);
     core.setOutput('access_token', refreshedAccessToken);
   } catch (error) {
-    core.setFailed(handleAxiosError(error));
+    core.setFailed(handleError(error));
   }
 };
 
 if (process.env.NODE_ENV !== 'test') {
-  run();
+  refreshToken();
 }
 
-module.exports = run;
+module.exports = refreshToken;

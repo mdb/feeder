@@ -1,7 +1,7 @@
 const core = require('@actions/core');
 const msw = require('msw');
 const setupServer = require('msw/node').setupServer;
-const run = require('./index');
+const refreshToken = require('./refresh-token');
 
 const inputToken = 'abc123';
 const outputToken = 'xyz789';
@@ -72,12 +72,12 @@ describe('refresh-token', () => {
   afterAll(() => server.close());
 
   it('runs', async () => {
-    await expect(run()).resolves.not.toThrow();
+    await expect(refreshToken()).resolves.not.toThrow();
   });
 
   describe('when a valid access token is provided', () => {
     beforeEach(async () => {
-      await run();
+      await refreshToken();
     });
 
     it('logs info', async () => {
@@ -97,7 +97,7 @@ describe('refresh-token', () => {
   describe('when no `access_token` input is provided', () => {
     beforeEach(async () => {
       unsetInputs();
-      await run();
+      await refreshToken();
     });
 
     it('fails with an informative message', () => {
@@ -120,7 +120,7 @@ describe('refresh-token', () => {
     beforeEach(async () => {
       unsetInputs();
       setInputs({ access_token: 'bad-token' });
-      await run();
+      await refreshToken();
     });
 
     it('logs info', async () => {

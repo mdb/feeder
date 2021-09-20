@@ -2,25 +2,7 @@ const axios = require('axios');
 const core = require('@actions/core');
 const fs = require('fs');
 const fsPromises = fs.promises;
-
-const handleAxiosError = (error) => {
-  if (error.response) {
-    const {
-      data: {
-        error: { message },
-      },
-      status,
-    } = error.response;
-
-    return `${status} ${message}`;
-  }
-
-  if (error.request) {
-    return 'No response received';
-  }
-
-  return error.message;
-};
+const handleError = require('./handle-error');
 
 async function getRecentMedia() {
   //await fsPromises.writeFile('media.json', JSON.stringify(result.data.data));
@@ -46,7 +28,7 @@ async function getRecentMedia() {
 
     core.setOutput('recent_media', recentMedia);
   } catch (error) {
-    core.setFailed(handleAxiosError(error));
+    core.setFailed(handleError(error));
   }
 };
 

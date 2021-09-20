@@ -1,7 +1,7 @@
 const core = require('@actions/core');
 const msw = require('msw');
 const setupServer = require('msw/node').setupServer;
-const getRecentMedia = require('./index');
+const getRecentMedia = require('./get-recent-media');
 
 const inputToken = 'abc123';
 
