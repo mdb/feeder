@@ -2,52 +2,18 @@ const core = require('@actions/core');
 const msw = require('msw');
 const setupServer = require('msw/node').setupServer;
 const getRecentMedia = require('./get-recent-media');
+const helpers = require('./test-helpers');
 
-const inputToken = 'abc123';
-
-const DEFAULT_INPUTS = {
-  access_token: inputToken,
-};
-
-const setInputs = (inputs) => {
-  Object.entries({ ...DEFAULT_INPUTS, ...inputs }).forEach(([key, value]) => {
-    process.env[`INPUT_${key.toUpperCase()}`] = value;
-  });
-};
-
-const unsetInputs = (inputKeys = []) => {
-  [...Object.keys(DEFAULT_INPUTS), ...inputKeys].forEach((keys) => {
-    delete process.env[`INPUT_${keys.toUpperCase()}`];
-  });
-};
+const inputToken = helpers.INPUT_TOKEN;
 
 const recentMediaJson = [{
   media_url: 'http://media_url',
   permalink: 'http://permalink'
 }];
 
-const server = setupServer(
-  msw.rest.get(
-    'https://graph.instagram.com/me/media',
-    (req, res, ctx) => {
-      const accessToken = req.url.searchParams.get('access_token');
-
-      if (accessToken === inputToken) {
-        return res(ctx.json(recentMediaJson));
-      }
-
-      return res(
-        ctx.status(400),
-        ctx.json({
-          error: {
-            message: 'Invalid OAuth access token',
-            type: 'OAuthException',
-            code: 190,
-          }
-        })
-      )
-    }
-  )
+const server = helpers.mockServer(
+  'https://graph.instagram.com/me/media',
+  recentMediaJson
 );
 
 describe('getRecentMedia', () => {
@@ -63,13 +29,13 @@ describe('getRecentMedia', () => {
     jest.resetModules();
     jest.resetAllMocks();
 
-    setInputs();
+    helpers.setInputs();
   });
 
   afterEach(() => {
     server.resetHandlers();
 
-    unsetInputs();
+    helpers.unsetInputs();
   });
 
   afterAll(() => server.close());
@@ -95,7 +61,7 @@ describe('getRecentMedia', () => {
 
   describe('when no `access_token` input is provided', () => {
     beforeEach(async () => {
-      unsetInputs();
+      helpers.unsetInputs();
       await getRecentMedia();
     });
 
@@ -117,8 +83,8 @@ describe('getRecentMedia', () => {
 
   describe('when an invalid `access_token` input is provided', () => {
     beforeEach(async () => {
-      unsetInputs();
-      setInputs({ access_token: 'bad-token' });
+      helpers.unsetInputs();
+      helpers.setInputs({ access_token: 'bad-token' });
       await getRecentMedia();
     });
 

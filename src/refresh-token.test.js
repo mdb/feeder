@@ -1,34 +1,13 @@
 const core = require('@actions/core');
-const msw = require('msw');
-const setupServer = require('msw/node').setupServer;
 const refreshToken = require('./refresh-token');
 const helpers = require('./test-helpers');
 
 const inputToken = helpers.INPUT_TOKEN;
 const outputToken = 'xyz789';
 
-const server = setupServer(
-  msw.rest.get(
-    'https://graph.instagram.com/refresh_access_token',
-    (req, res, ctx) => {
-      const accessToken = req.url.searchParams.get('access_token');
-
-      if (accessToken === inputToken) {
-        return res(ctx.json({ access_token: outputToken }));
-      }
-
-      return res(
-        ctx.status(400),
-        ctx.json({
-          error: {
-            message: 'Invalid OAuth access token',
-            type: 'OAuthException',
-            code: 190,
-          },
-        }),
-      );
-    },
-  ),
+const server = helpers.mockServer(
+  'https://graph.instagram.com/refresh_access_token',
+  { access_token: outputToken }
 );
 
 describe('refresh-token', () => {
