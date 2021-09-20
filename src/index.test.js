@@ -1,28 +1,11 @@
 const core = require('@actions/core');
 const refreshToken = require('./refresh-token');
 const getRecentMedia = require('./get-recent-media');
+const helpers = require('./test-helpers');
 const run = require('./index');
 
 jest.mock('./get-recent-media', () => jest.fn());
 jest.mock('./refresh-token', () => jest.fn());
-
-const inputToken = 'abc123';
-
-const DEFAULT_INPUTS = {
-  access_token: inputToken
-};
-
-const setInputs = (inputs) => {
-  Object.entries({ ...DEFAULT_INPUTS, ...inputs }).forEach(([key, value]) => {
-    process.env[`INPUT_${key.toUpperCase()}`] = value;
-  });
-};
-
-const unsetInputs = (inputKeys = []) => {
-  [...Object.keys(DEFAULT_INPUTS), ...inputKeys].forEach((keys) => {
-    delete process.env[`INPUT_${keys.toUpperCase()}`];
-  });
-};
 
 describe('run', () => {
   beforeAll(() => {
@@ -34,16 +17,16 @@ describe('run', () => {
     jest.resetModules();
     jest.resetAllMocks();
 
-    setInputs();
+    helpers.setInputs();
   });
 
   afterEach(() => {
-    unsetInputs();
+    helpers.unsetInputs();
   });
 
   describe('when no `access_token` input is provided', () => {
     beforeEach(async () => {
-      unsetInputs();
+      helpers.unsetInputs();
       await run();
     });
 
@@ -68,8 +51,8 @@ describe('run', () => {
 
   describe('when no `action` input is provided', () => {
     beforeEach(async () => {
-      unsetInputs();
-      setInputs({ access_token: 'token' });
+      helpers.unsetInputs();
+      helpers.setInputs({ access_token: 'token' });
 
       await run();
     });
@@ -95,7 +78,7 @@ describe('run', () => {
 
   describe('when the `action` input is `refresh_token`', () => {
     beforeEach(async () => {
-      setInputs({ action: 'refresh_token' });
+      helpers.setInputs({ action: 'refresh_token' });
 
       await run();
     });
@@ -115,7 +98,7 @@ describe('run', () => {
 
   describe('when the `action` input is `get_recent_media`', () => {
     beforeEach(async () => {
-      setInputs({ action: 'get_recent_media' });
+      helpers.setInputs({ action: 'get_recent_media' });
 
       await run();
     });

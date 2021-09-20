@@ -2,25 +2,10 @@ const core = require('@actions/core');
 const msw = require('msw');
 const setupServer = require('msw/node').setupServer;
 const refreshToken = require('./refresh-token');
+const helpers = require('./test-helpers');
 
-const inputToken = 'abc123';
+const inputToken = helpers.INPUT_TOKEN;
 const outputToken = 'xyz789';
-
-const DEFAULT_INPUTS = {
-  access_token: inputToken,
-};
-
-const setInputs = (inputs) => {
-  Object.entries({ ...DEFAULT_INPUTS, ...inputs }).forEach(([key, value]) => {
-    process.env[`INPUT_${key.toUpperCase()}`] = value;
-  });
-};
-
-const unsetInputs = (inputKeys = []) => {
-  [...Object.keys(DEFAULT_INPUTS), ...inputKeys].forEach((keys) => {
-    delete process.env[`INPUT_${keys.toUpperCase()}`];
-  });
-};
 
 const server = setupServer(
   msw.rest.get(
@@ -60,13 +45,13 @@ describe('refresh-token', () => {
     jest.resetModules();
     jest.resetAllMocks();
 
-    setInputs();
+    helpers.setInputs();
   });
 
   afterEach(() => {
     server.resetHandlers();
 
-    unsetInputs();
+    helpers.unsetInputs();
   });
 
   afterAll(() => server.close());
@@ -96,7 +81,7 @@ describe('refresh-token', () => {
 
   describe('when no `access_token` input is provided', () => {
     beforeEach(async () => {
-      unsetInputs();
+      helpers.unsetInputs();
       await refreshToken();
     });
 
@@ -118,8 +103,8 @@ describe('refresh-token', () => {
 
   describe('when an invalid `access_token` input is provided', () => {
     beforeEach(async () => {
-      unsetInputs();
-      setInputs({ access_token: 'bad-token' });
+      helpers.unsetInputs();
+      helpers.setInputs({ access_token: 'bad-token' });
       await refreshToken();
     });
 
