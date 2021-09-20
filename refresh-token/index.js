@@ -1,7 +1,5 @@
-const axios = require('axios');
 const core = require('@actions/core');
-const fs = require('fs');
-const fsPromises = fs.promises;
+const axios = require('axios');
 
 const handleAxiosError = (error) => {
   if (error.response) {
@@ -22,36 +20,31 @@ const handleAxiosError = (error) => {
   return error.message;
 };
 
-async function getRecentMedia() {
-  //await fsPromises.writeFile('media.json', JSON.stringify(result.data.data));
-
+const run = async () => {
   try {
     const accessToken = core.getInput('access_token', { required: true });
 
-    core.info('Fetching recent media.');
+    core.info('Requesting new access token.');
 
     const {
-      data: recentMedia,
-    } = await axios.get('https://graph.instagram.com/me/media', {
+      data: { access_token: refreshedAccessToken },
+    } = await axios.get('https://graph.instagram.com/refresh_access_token', {
       params: {
         access_token: accessToken,
-        fields: [
-          'media_url',
-          'permalink'
-        ]
-      }
+        grant_type: 'ig_refresh_token',
+      },
     });
 
-    core.info('Successfully fetched recent media.');
-
-    core.setOutput('recent_media', recentMedia);
+    core.info('New access token received.');
+    core.setSecret(refreshedAccessToken);
+    core.setOutput('access_token', refreshedAccessToken);
   } catch (error) {
     core.setFailed(handleAxiosError(error));
   }
 };
 
 if (process.env.NODE_ENV !== 'test') {
-  getRecentMedia();
+  run();
 }
 
-module.exports = getRecentMedia;
+module.exports = run;
