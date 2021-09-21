@@ -12,7 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: npm-install
-        run: npm install
+        env:
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${PERSONAL_ACCESS_TOKEN}" > .npmrc
+          npm install
       - name: refresh-ig-access-token
         id: instagram
         uses: ./node_modules/@saulhardman/refresh-instagram-access-token
