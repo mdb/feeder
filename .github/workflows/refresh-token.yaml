@@ -15,9 +15,9 @@ jobs:
         with:
           node-version: 16
       - name: npm-install
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-        run: npm install
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.PERSONAL_ACCESS_TOKEN }}" >> .npmrc
+          npm install
       - name: refresh-ig-access-token
         id: instagram
         uses: ./node_modules/@saulhardman/refresh-instagram-access-token
