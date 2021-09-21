@@ -1,4 +1,4 @@
-name: generate-instagram-feed
+name: generate-ig-feed-json
 
 on:
   push:
