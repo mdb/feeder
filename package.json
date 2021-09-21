@@ -10,5 +10,8 @@
     "start": "node index.js"
   },
   "author": "Mike Ball",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@saulhardman/refresh-instagram-access-token": "^0.1.9"
+  }
 }
