@@ -15,7 +15,7 @@ jobs:
         env:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          echo "//npm.pkg.github.com/:_authToken=${PERSONAL_ACCESS_TOKEN}" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${PERSONAL_ACCESS_TOKEN}" >> .npmrc
           npm install
       - name: refresh-ig-access-token
         id: instagram
