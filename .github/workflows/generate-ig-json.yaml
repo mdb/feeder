@@ -2,6 +2,8 @@ name: generate-ig-feed-json
 
 on:
   push:
+    branches:
+      - main
   schedule:
     - cron: 0 0 * * *
 
@@ -19,6 +21,8 @@ jobs:
         run: |
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.PERSONAL_ACCESS_TOKEN }}" >> .npmrc
           npm install
+      - name: test
+        run: npm test
       - name: fetch-json
         id: feed
         env:
