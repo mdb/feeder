@@ -4,14 +4,17 @@
   "description": "Recent Instagram posts",
   "main": "index.js",
   "dependencies": {
+    "@saulhardman/refresh-instagram-access-token": "^0.1.9",
     "axios": ">=0.21.1"
   },
   "scripts": {
+    "test": "NODE_ENV=test jest --verbose",
     "start": "node index.js"
   },
   "author": "Mike Ball",
   "license": "MIT",
   "devDependencies": {
-    "@saulhardman/refresh-instagram-access-token": "^0.1.9"
+    "jest": "^27.2.1",
+    "msw": "^0.35.0"
   }
 }

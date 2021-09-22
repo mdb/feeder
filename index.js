@@ -1,24 +1,55 @@
-const axios = require('axios')
-const fs = require('fs')
-const fsPromises = fs.promises
-const accessToken = process.env.IG_ACCESS_TOKEN
+const axios = require('axios');
+const fs = require('fs');
+const fsPromises = fs.promises;
 
-if (!accessToken) {
-  console.log(`IG_ACCESS_TOKEN environment variable must be set`)
-  process.exit(1)
-}
+const handleError = (error) => {
+  if (error.response) {
+    const {
+      data: {
+        error: { message },
+      },
+      status,
+    } = error.response;
 
-async function getRecentMedia() {
-  const result = await axios({
-    url: `https://graph.instagram.com/me/media?fields=media_url,permalink&access_token=${accessToken}`
-  })
-
-  if (result.status >= 400) {
-    console.log(`received ${result.status} from graph.instagram.com`)
-    process.exit(1)
+    return `${error.message}: ${message}`;
   }
 
-  await fsPromises.writeFile('media.json', JSON.stringify(result.data.data));
+  return error.message;
+};
+
+module.exports.error = (message) => {
+  console.error(message);
+  process.exit(1);
+};
+
+const getRecentMedia = async () => {
+  try {
+    const accessToken = process.env.IG_ACCESS_TOKEN;
+
+    if (!accessToken) {
+      throw new Error('Missing required environment variable "IG_ACCESS_TOKEN."');
+    }
+
+    const {
+      data: recentMedia,
+    } = await axios.get('https://graph.instagram.com/me/media', {
+      params: {
+        access_token: accessToken,
+        fields: [
+          'media_url',
+          'permalink'
+        ]
+      }
+    });
+
+    await fsPromises.writeFile('media.json', JSON.stringify(recentMedia));
+  } catch (err) {
+    module.exports.error(handleError(err));
+  }
+};
+
+if (process.env.NODE_ENV !== 'test') {
+  getRecentMedia();
 }
 
-getRecentMedia();
+module.exports.getRecentMedia = getRecentMedia;
