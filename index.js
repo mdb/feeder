@@ -31,14 +31,13 @@ const getRecentMedia = async () => {
     }
 
     const {
-      data: recentMedia,
+      data: {
+        data: recentMedia
+      }
     } = await axios.get('https://graph.instagram.com/me/media', {
       params: {
         access_token: accessToken,
-        fields: [
-          'media_url',
-          'permalink'
-        ]
+        fields: 'media_url,permalink'
       }
     });
 

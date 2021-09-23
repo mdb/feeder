@@ -7,10 +7,12 @@ describe('main', () => {
   describe('getRecentMedia', () => {
     const validToken = 'abc123';
 
-    const recentMediaJson = [{
-      media_url: 'http://media_url',
-      permalink: 'http://permalink'
-    }];
+    const recentMediaJson = {
+      data: [{
+        media_url: 'http://media_url',
+        permalink: 'http://permalink'
+      }]
+    };
 
     const mockServer = (url, response) => {
       return setupServer(
@@ -18,21 +20,33 @@ describe('main', () => {
           url,
           (req, res, ctx) => {
             const accessToken = req.url.searchParams.get('access_token');
+            const fields = req.url.searchParams.get('fields');
 
-            if (accessToken === validToken) {
-              return res(ctx.json(response));
+            if (accessToken !== validToken && fields) {
+              return res(
+                ctx.status(400),
+                ctx.json({
+                  error: {
+                    message: 'Invalid OAuth access token',
+                    type: 'OAuthException',
+                    code: 190
+                  }
+                })
+              );
             }
 
-            return res(
-              ctx.status(400),
-              ctx.json({
-                error: {
-                  message: 'Invalid OAuth access token',
-                  type: 'OAuthException',
-                  code: 190,
-                }
-              })
-            )
+            if (!fields.includes('media_url') || !fields.includes('permalink')) {
+              return res(
+                ctx.status(500),
+                ctx.json({
+                  error: {
+                    message: 'Invalid fields'
+                  }
+                })
+              );
+            }
+
+            return res(ctx.json(response));
           }
         )
       );
@@ -73,7 +87,7 @@ describe('main', () => {
       it('writes the Instagram API response JSON to a "media.json" file', async () => {
         expect(fs.promises.writeFile).toHaveBeenCalledWith(
           'media.json',
-          JSON.stringify(recentMediaJson)
+          JSON.stringify(recentMediaJson.data)
         );
       });
     });
