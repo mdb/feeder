@@ -42,7 +42,7 @@ const getRecentMedia = async () => {
       }
     });
 
-    await fsPromises.writeFile(path.join(__dirname, 'media.json'), JSON.stringify(recentMedia));
+    await fsPromises.writeFile('media.json', JSON.stringify(recentMedia));
   } catch (err) {
     module.exports.error(handleError(err));
   }
@@ -69,3 +69,4 @@ const saveRecentMedia = async () => {
 })();
 
 module.exports.getRecentMedia = getRecentMedia;
+module.exports.saveRecentMedia = saveRecentMedia;
