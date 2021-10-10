@@ -48,30 +48,24 @@ const getRecentMedia = async () => {
   }
 };
 
-const downloadRecentMedia = async () => {
+const saveRecentMedia = async () => {
   const media = await fsPromises.readFile('media.json');
-
-  JSON.parse(media).forEach(async (m) => {
-    const fileToSave = await axios({
+  const recentMediaJson = JSON.parse(media).map(async (m) => {
+    const mediaFile = await axios({
       url: m.media_url,
-      responseType: 'stream',
+      responseType: 'stream'
     });
     const download = fs.createWriteStream(path.join(__dirname, `${m.id}.jpg`));
-    await new Promise((resolve, reject)=> {
-      fileToSave.data.pipe(download);
-      download.on("close", resolve);
-      download.on("error", console.error);
-    });
+
+    await mediaFile.data.pipe(download);
   });
 };
 
-const writeFile = async (media) => {
-  const response = await axios.get(media.media_url);
-  await fsPromises.writeFile(`${media.id}.jpg`, response.data);
-};
-
-if (process.env.NODE_ENV !== 'test') {
-  downloadRecentMedia();
-}
+(async () => {
+  if (process.env.NODE_ENV !== 'test') {
+    await getRecentMedia();
+    await saveRecentMedia();
+  }
+})();
 
 module.exports.getRecentMedia = getRecentMedia;
