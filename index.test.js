@@ -64,14 +64,13 @@ describe('main', () => {
     });
 
     beforeEach(() => {
-      jest.resetModules();
-      jest.resetAllMocks();
-
       jest.spyOn(main, 'error').mockImplementation(jest.fn());
       jest.spyOn(fs.promises, 'writeFile').mockImplementation(jest.fn());
     });
 
     afterEach(() => {
+      jest.resetModules();
+      jest.restoreAllMocks();
       server.resetHandlers();
       delete process.env.IG_ACCESS_TOKEN;
     });
@@ -111,6 +110,47 @@ describe('main', () => {
       it('errors with the relevant message from the upstream Instagram API', () => {
         expect(main.error).toHaveBeenCalledWith('Request failed with status code 400: Invalid OAuth access token');
       });
+    });
+  });
+
+  describe('saveRecentMedia', () => {
+    const fsPromises = fs.promises;
+
+    const mockServer = (url, response) => {
+      return setupServer(
+        msw.rest.get(
+          url,
+          (req, res, ctx) => {
+            return res(ctx.json(response));
+          }
+        )
+      );
+    };
+
+    const id = '1';
+
+    beforeEach(async () => {
+      await fsPromises.writeFile('media.json', JSON.stringify([{
+        media_url: 'http://foo.com/bar.jpg',
+        id: id,
+      }]));
+    });
+
+    afterEach(async () => {
+      await fsPromises.unlink('media.json');
+    });
+
+    it('downloads each image from the media.json file', async () => {
+      console.log('2')
+      try {
+        await main.saveRecentMedia();
+
+        const contents = await fsPromises.readFile(`${id}.jpg`);
+
+        expect(contents).toEqual('foo');
+      } catch(error) {
+        expect(error).toBeUndefined();
+      }
     });
   });
 });
