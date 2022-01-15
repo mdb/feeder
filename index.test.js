@@ -115,42 +115,51 @@ describe('main', () => {
 
   describe('saveRecentMedia', () => {
     const fsPromises = fs.promises;
+    const data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    const id = '1';
+    const mediaUrl = 'http://foo.com/bar.jpg';
 
-    const mockServer = (url, response) => {
+    const mockServer = (url) => {
       return setupServer(
         msw.rest.get(
           url,
-          (req, res, ctx) => {
-            return res(ctx.json(response));
+          (_, res, ctx) => {
+            const buffer = Buffer.from(data, 'base64');
+
+            return res(
+              ctx.set('Content-Length', buffer.byteLength.toString()),
+              ctx.set('Content-Type', 'image/jpeg'),
+              ctx.body(buffer),
+            );
           }
         )
       );
     };
 
-    const id = '1';
-
     beforeEach(async () => {
       await fsPromises.writeFile('media.json', JSON.stringify([{
-        media_url: 'http://foo.com/bar.jpg',
+        media_url: mediaUrl,
         id: id,
       }]));
+
+      server = mockServer(mediaUrl);
+
+      server.listen();
     });
 
     afterEach(async () => {
       await fsPromises.unlink('media.json');
+      await fsPromises.unlink(`${id}.jpg`);
     });
 
-    it('downloads each image from the media.json file', async () => {
-      console.log('2')
-      try {
-        await main.saveRecentMedia();
+    afterAll(() => server.close());
 
-        const contents = await fsPromises.readFile(`${id}.jpg`);
+    it('downloads each the image whose URL is declared in the media.json file and saves it to a ${id}.jpg file', async () => {
+      await main.saveRecentMedia();
 
-        expect(contents).toEqual('foo');
-      } catch(error) {
-        expect(error).toBeUndefined();
-      }
+      const contents = await fsPromises.readFile(`${id}.jpg`);
+
+      expect(contents.toString('base64')).toEqual(data);
     });
   });
 });

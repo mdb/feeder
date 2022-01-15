@@ -20,7 +20,7 @@ const handleError = (error) => {
 
 module.exports.error = (message) => {
   console.error(message);
-  process.exit(1);
+  //process.exit(1);
 };
 
 const getRecentMedia = async () => {
@@ -49,16 +49,26 @@ const getRecentMedia = async () => {
 };
 
 const saveRecentMedia = async () => {
-  const media = await fsPromises.readFile('media.json');
-  const recentMediaJson = JSON.parse(media).map(async (m) => {
-    const mediaFile = await axios({
-      url: m.media_url,
-      responseType: 'stream'
-    });
-    const download = fs.createWriteStream(path.join(__dirname, `${m.id}.jpg`));
+  try {
+    const media = await fsPromises.readFile('media.json');
 
-    await mediaFile.data.pipe(download);
-  });
+    await Promise.all(JSON.parse(media).map(async (m) => {
+      const mediaFile = await axios({
+        url: m.media_url,
+        responseType: 'stream'
+      });
+      const download = fs.createWriteStream(path.join(__dirname, `${m.id}.jpg`));
+
+      mediaFile.data.pipe(download);
+
+      return new Promise((resolve, reject) => {
+        download.on('finish', resolve);
+        download.on('error', reject);
+      });
+    }));
+  } catch(err) {
+    module.exports.error(handleError(err));
+  }
 };
 
 (async () => {
