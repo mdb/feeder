@@ -32,7 +32,9 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ig
-          path: media.json
+          path: |
+            media.json
+            *.jpg
           retention-days: 1
 
   publish-json-to-gh-pages:
