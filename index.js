@@ -2,21 +2,9 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const fsPromises = fs.promises;
-
-const handleError = (error) => {
-  if (error.response) {
-    const {
-      data: {
-        error: { message },
-      },
-      status,
-    } = error.response;
-
-    return `${error.message}: ${message}`;
-  }
-
-  return error.message;
-};
+const util = require('util');
+const stream = require('stream');
+const pipeline = util.promisify(stream.pipeline);
 
 module.exports.error = (message) => {
   console.error(message);
@@ -44,7 +32,7 @@ const getRecentMedia = async () => {
 
     await fsPromises.writeFile('media.json', JSON.stringify(recentMedia));
   } catch (error) {
-    throw new Error(handleError(error));
+    throw error;
   }
 };
 
@@ -53,21 +41,23 @@ const saveRecentMedia = async () => {
     const media = await fsPromises.readFile('media.json');
 
     await Promise.all(JSON.parse(media).map(async (m) => {
-      const mediaFile = await axios({
-        url: m.media_url,
-        responseType: 'stream'
-      });
-      const download = fs.createWriteStream(path.join(__dirname, `${m.id}.jpg`));
-
-      mediaFile.data.pipe(download);
-
-      return new Promise((resolve, reject) => {
-        download.on('finish', resolve);
-        download.on('error', reject);
-      });
+      return downloadFile(m.media_url, m.id);
     }));
   } catch(error) {
-    throw new Error(handleError(error));
+    throw error;
+  }
+};
+
+const downloadFile = async (url, id) => {
+  try {
+    const mediaFile = await axios({
+      url: url,
+      responseType: 'stream'
+    });
+
+    await pipeline(mediaFile.data, fs.createWriteStream(path.join(__dirname, `${id}.jpg`)));
+  } catch(error) {
+    throw error;
   }
 };
 
@@ -80,7 +70,7 @@ const saveRecentMedia = async () => {
     await getRecentMedia();
     await saveRecentMedia();
   } catch(error) {
-    module.exports.error(handleError(err));
+    module.exports.error(err);
   }
 })();
 

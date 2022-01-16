@@ -108,7 +108,7 @@ describe('main', () => {
         try {
           await main.getRecentMedia();
         } catch(error) {
-          expect(error.message).toEqual('Request failed with status code 400: Invalid OAuth access token');
+          expect(error.message).toEqual('Request failed with status code 400');
         }
       });
     });
@@ -189,12 +189,11 @@ describe('main', () => {
 
       afterAll(() => server.close());
 
-      // TODO
-      xit('throws an error', async () => {
+      it('throws an error', async () => {
         try {
           await main.saveRecentMedia();
         } catch(error) {
-          expect(error.message).toEqual(`error: ${status}`);
+          expect(error.message).toEqual(`Request failed with status code ${status}`);
         }
       });
     });
