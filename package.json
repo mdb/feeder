@@ -1,11 +1,11 @@
 {
   "name": "ig-feed",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Recent Instagram posts",
   "main": "index.js",
   "dependencies": {
     "@saulhardman/refresh-instagram-access-token": "^0.1.9",
-    "axios": ">=0.21.1"
+    "axios": ">=0.24.0"
   },
   "scripts": {
     "test": "NODE_ENV=test jest --verbose",

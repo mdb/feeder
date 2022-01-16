@@ -23,7 +23,7 @@ jobs:
           npm install
       - name: test
         run: npm test
-      - name: fetch-json
+      - name: fetch-feed
         id: feed
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
@@ -32,22 +32,24 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ig
-          path: media.json
+          path: |
+            media.json
+            *.jpg
           retention-days: 1
 
-  publish-json-to-gh-pages:
+  publish-feed-to-gh-pages:
     needs: generate-json
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
           ref: gh-pages
-      - name: download-json
+      - name: download-feed
         uses: actions/download-artifact@v2
         with:
           name: ig
           path: ig
-      - name: publish-json-to-gh-pages
+      - name: publish-feed-to-gh-pages
         uses: mikeal/publish-to-github-action@923d6a6f64c943c0f82f81180c4a84d8e0edaa3e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

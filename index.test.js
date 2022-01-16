@@ -64,14 +64,13 @@ describe('main', () => {
     });
 
     beforeEach(() => {
-      jest.resetModules();
-      jest.resetAllMocks();
-
       jest.spyOn(main, 'error').mockImplementation(jest.fn());
       jest.spyOn(fs.promises, 'writeFile').mockImplementation(jest.fn());
     });
 
     afterEach(() => {
+      jest.resetModules();
+      jest.restoreAllMocks();
       server.resetHandlers();
       delete process.env.IG_ACCESS_TOKEN;
     });
@@ -93,23 +92,109 @@ describe('main', () => {
     });
 
     describe('when no IG_ACCESS_TOKEN environment variable is provided', () => {
-      beforeEach(async () => {
-        await main.getRecentMedia();
-      });
-
-      it('errors with an informative message', () => {
-        expect(main.error).toHaveBeenCalledWith('Missing required environment variable "IG_ACCESS_TOKEN."')
+      it('errors with an informative message', async () => {
+        try {
+          await main.getRecentMedia();
+        } catch(error) {
+          expect(error.message).toEqual('Missing required environment variable "IG_ACCESS_TOKEN."');
+        }
       });
     });
 
     describe('when an invalid IG_ACCESS_TOKEN environment variable is provided', () => {
-      beforeEach(async () => {
+      it('errors with the relevant message from the upstream Instagram API', async () => {
         process.env.IG_ACCESS_TOKEN = 'bad-token';
-        await main.getRecentMedia();
+
+        try {
+          await main.getRecentMedia();
+        } catch(error) {
+          expect(error.message).toEqual('Request failed with status code 400');
+        }
+      });
+    });
+  });
+
+  describe('saveRecentMedia', () => {
+    const fsPromises = fs.promises;
+    const data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    const id = '1';
+    const mediaUrl = 'http://foo.com/bar.jpg';
+
+    const mockServer = (url, status) => {
+      status = status || 200;
+
+      return setupServer(
+        msw.rest.get(
+          url,
+          (_, res, ctx) => {
+            const buffer = Buffer.from(data, 'base64');
+
+            return res(
+              ctx.status(status),
+              ctx.set('Content-Length', buffer.byteLength.toString()),
+              ctx.set('Content-Type', 'image/jpeg'),
+              (status === 200 ? ctx.body(buffer) : ctx.json({
+                error: {
+                  message: `error: ${status}`
+                }
+              })),
+            );
+          }
+        )
+      );
+    };
+
+    beforeEach(async () => {
+      await fsPromises.writeFile('media.json', JSON.stringify([{
+        media_url: mediaUrl,
+        id: id,
+      }]));
+    });
+
+    describe('when the upstream server experiencing no errors serving the images', () => {
+      beforeEach(async () => {
+        server = mockServer(mediaUrl);
+
+        server.listen();
       });
 
-      it('errors with the relevant message from the upstream Instagram API', () => {
-        expect(main.error).toHaveBeenCalledWith('Request failed with status code 400: Invalid OAuth access token');
+      afterEach(async () => {
+        await fsPromises.unlink('media.json');
+      });
+
+      afterAll(() => server.close());
+
+      it('downloads each the image whose URL is declared in the media.json file and saves it to a ${id}.jpg file', async () => {
+        await main.saveRecentMedia();
+
+        const contents = await fsPromises.readFile(`${id}.jpg`);
+
+        expect(contents.toString('base64')).toEqual(data);
+      });
+    });
+
+    describe('when the upstream server returns an error serving the images', () => {
+      const status = 404;
+
+      beforeEach(async () => {
+        server = mockServer(mediaUrl, status);
+
+        server.listen();
+      });
+
+      afterEach(async () => {
+        await fsPromises.unlink('media.json');
+        await fsPromises.unlink(`${id}.jpg`);
+      });
+
+      afterAll(() => server.close());
+
+      it('throws an error', async () => {
+        try {
+          await main.saveRecentMedia();
+        } catch(error) {
+          expect(error.message).toEqual(`Request failed with status code ${status}`);
+        }
       });
     });
   });
