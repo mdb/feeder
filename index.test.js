@@ -92,23 +92,24 @@ describe('main', () => {
     });
 
     describe('when no IG_ACCESS_TOKEN environment variable is provided', () => {
-      beforeEach(async () => {
-        await main.getRecentMedia();
-      });
-
-      it('errors with an informative message', () => {
-        expect(main.error).toHaveBeenCalledWith('Missing required environment variable "IG_ACCESS_TOKEN."')
+      it('errors with an informative message', async () => {
+        try {
+          await main.getRecentMedia();
+        } catch(error) {
+          expect(error.message).toEqual('Missing required environment variable "IG_ACCESS_TOKEN."');
+        }
       });
     });
 
     describe('when an invalid IG_ACCESS_TOKEN environment variable is provided', () => {
-      beforeEach(async () => {
+      it('errors with the relevant message from the upstream Instagram API', async () => {
         process.env.IG_ACCESS_TOKEN = 'bad-token';
-        await main.getRecentMedia();
-      });
 
-      it('errors with the relevant message from the upstream Instagram API', () => {
-        expect(main.error).toHaveBeenCalledWith('Request failed with status code 400: Invalid OAuth access token');
+        try {
+          await main.getRecentMedia();
+        } catch(error) {
+          expect(error.message).toEqual('Request failed with status code 400: Invalid OAuth access token');
+        }
       });
     });
   });

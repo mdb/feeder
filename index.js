@@ -20,7 +20,7 @@ const handleError = (error) => {
 
 module.exports.error = (message) => {
   console.error(message);
-  //process.exit(1);
+  process.exit(1);
 };
 
 const getRecentMedia = async () => {
@@ -44,7 +44,7 @@ const getRecentMedia = async () => {
 
     await fsPromises.writeFile('media.json', JSON.stringify(recentMedia));
   } catch (err) {
-    module.exports.error(handleError(err));
+    throw new Error(handleError(err));
   }
 };
 
@@ -67,14 +67,20 @@ const saveRecentMedia = async () => {
       });
     }));
   } catch(err) {
-    module.exports.error(handleError(err));
+    throw new Error(handleError(err));
   }
 };
 
 (async () => {
-  if (process.env.NODE_ENV !== 'test') {
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
+
+  try {
     await getRecentMedia();
     await saveRecentMedia();
+  } catch(error) {
+    module.exports.error(handleError(err));
   }
 })();
 
