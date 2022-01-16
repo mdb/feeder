@@ -18,7 +18,7 @@ jobs:
           npm install
       - name: test
         run: npm test
-      - name: fetch-json
+      - name: fetch-feed
         id: feed
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
@@ -44,4 +44,4 @@ jobs:
       - name: ensure-json
         run: cat ig-pr/media.json
       - name: ensure-images
-        run: ls ig-pr | grep *.jpg
+        run: ls ig-pr | grep '.jpg'
