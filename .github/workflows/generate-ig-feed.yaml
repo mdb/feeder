@@ -1,4 +1,4 @@
-name: generate-ig-feed-json
+name: generate-ig-feed
 
 on:
   push:
@@ -8,9 +8,9 @@ on:
     - cron: 0 0 * * *
 
 jobs:
-  generate-json:
+  generate-feed:
     runs-on: ubuntu-latest
-    name: generate-json
+    name: generate-feed
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -28,7 +28,7 @@ jobs:
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
         run: npm start
-      - name: upload-json
+      - name: upload-feed
         uses: actions/upload-artifact@v2
         with:
           name: ig
@@ -38,7 +38,7 @@ jobs:
           retention-days: 1
 
   publish-feed-to-gh-pages:
-    needs: generate-json
+    needs: generate-feed
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
