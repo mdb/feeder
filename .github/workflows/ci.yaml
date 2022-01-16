@@ -32,3 +32,16 @@ jobs:
             *.jpg
           retention-days: 1
 
+  ensure-expected-artifacts:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: download-artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ig-pr
+          path: ig-pr
+      - name: ensure-json
+        run: cat ig-pr/media.json
+      - name: ensure-images
+        run: ls ig-pr | grep *.jpg
