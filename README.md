@@ -1,4 +1,4 @@
-[![generate-ig-feed-json](https://github.com/mdb/ig-feed/actions/workflows/generate-ig-json.yaml/badge.svg)](https://github.com/mdb/ig-feed/actions/workflows/generate-ig-json.yaml) [![refresh-ig-access-token](https://github.com/mdb/ig-feed/actions/workflows/refresh-ig-token.yaml/badge.svg)](https://github.com/mdb/ig-feed/actions/workflows/refresh-ig-token.yaml)
+[![generate-ig-feed](https://github.com/mdb/ig-feed/actions/workflows/generate-ig-feed.yaml/badge.svg)](https://github.com/mdb/ig-feed/actions/workflows/generate-ig-feed.yaml) [![refresh-ig-access-token](https://github.com/mdb/ig-feed/actions/workflows/refresh-ig-token.yaml/badge.svg)](https://github.com/mdb/ig-feed/actions/workflows/refresh-ig-token.yaml)
 
 # ig-feed
 
