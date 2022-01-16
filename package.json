@@ -1,6 +1,6 @@
 {
   "name": "ig-feed",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Recent Instagram posts",
   "main": "index.js",
   "dependencies": {
