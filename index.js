@@ -43,8 +43,8 @@ const getRecentMedia = async () => {
     });
 
     await fsPromises.writeFile('media.json', JSON.stringify(recentMedia));
-  } catch (err) {
-    throw new Error(handleError(err));
+  } catch (error) {
+    throw new Error(handleError(error));
   }
 };
 
@@ -66,8 +66,8 @@ const saveRecentMedia = async () => {
         download.on('error', reject);
       });
     }));
-  } catch(err) {
-    throw new Error(handleError(err));
+  } catch(error) {
+    throw new Error(handleError(error));
   }
 };
 

@@ -120,7 +120,9 @@ describe('main', () => {
     const id = '1';
     const mediaUrl = 'http://foo.com/bar.jpg';
 
-    const mockServer = (url) => {
+    const mockServer = (url, status) => {
+      status = status || 200;
+
       return setupServer(
         msw.rest.get(
           url,
@@ -128,9 +130,14 @@ describe('main', () => {
             const buffer = Buffer.from(data, 'base64');
 
             return res(
+              ctx.status(status),
               ctx.set('Content-Length', buffer.byteLength.toString()),
               ctx.set('Content-Type', 'image/jpeg'),
-              ctx.body(buffer),
+              (status === 200 ? ctx.body(buffer) : ctx.json({
+                error: {
+                  message: `error: ${status}`
+                }
+              })),
             );
           }
         )
@@ -142,25 +149,54 @@ describe('main', () => {
         media_url: mediaUrl,
         id: id,
       }]));
-
-      server = mockServer(mediaUrl);
-
-      server.listen();
     });
 
-    afterEach(async () => {
-      await fsPromises.unlink('media.json');
-      await fsPromises.unlink(`${id}.jpg`);
+    describe('when the upstream server experiencing no errors serving the images', () => {
+      beforeEach(async () => {
+        server = mockServer(mediaUrl);
+
+        server.listen();
+      });
+
+      afterEach(async () => {
+        await fsPromises.unlink('media.json');
+      });
+
+      afterAll(() => server.close());
+
+      it('downloads each the image whose URL is declared in the media.json file and saves it to a ${id}.jpg file', async () => {
+        await main.saveRecentMedia();
+
+        const contents = await fsPromises.readFile(`${id}.jpg`);
+
+        expect(contents.toString('base64')).toEqual(data);
+      });
     });
 
-    afterAll(() => server.close());
+    describe('when the upstream server returns an error serving the images', () => {
+      const status = 404;
 
-    it('downloads each the image whose URL is declared in the media.json file and saves it to a ${id}.jpg file', async () => {
-      await main.saveRecentMedia();
+      beforeEach(async () => {
+        server = mockServer(mediaUrl, status);
 
-      const contents = await fsPromises.readFile(`${id}.jpg`);
+        server.listen();
+      });
 
-      expect(contents.toString('base64')).toEqual(data);
+      afterEach(async () => {
+        await fsPromises.unlink('media.json');
+        await fsPromises.unlink(`${id}.jpg`);
+      });
+
+      afterAll(() => server.close());
+
+      // TODO
+      xit('throws an error', async () => {
+        try {
+          await main.saveRecentMedia();
+        } catch(error) {
+          expect(error.message).toEqual(`error: ${status}`);
+        }
+      });
     });
   });
 });
