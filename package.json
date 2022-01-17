@@ -8,7 +8,7 @@
     "axios": ">=0.24.0"
   },
   "scripts": {
-    "test": "NODE_ENV=test jest --verbose",
+    "test": "jest --verbose",
     "start": "node index.js"
   },
   "author": "Mike Ball",
