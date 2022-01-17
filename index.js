@@ -6,11 +6,6 @@ const util = require('util');
 const stream = require('stream');
 const pipeline = util.promisify(stream.pipeline);
 
-module.exports.error = (message) => {
-  console.error(message);
-  process.exit(1);
-};
-
 const getRecentMedia = async () => {
   try {
     const accessToken = process.env.IG_ACCESS_TOKEN;
@@ -70,7 +65,8 @@ const downloadFile = async (url, id) => {
     await getRecentMedia();
     await saveRecentMedia();
   } catch(error) {
-    module.exports.error(err);
+    console.error(message);
+    process.exit(1);
   }
 })();
 

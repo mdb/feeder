@@ -64,7 +64,6 @@ describe('main', () => {
     });
 
     beforeEach(() => {
-      jest.spyOn(main, 'error').mockImplementation(jest.fn());
       jest.spyOn(fs.promises, 'writeFile').mockImplementation(jest.fn());
     });
 
