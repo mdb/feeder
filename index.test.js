@@ -2,6 +2,7 @@ const msw = require('msw');
 const setupServer = require('msw/node').setupServer;
 const main = require('./index');
 const fs = require('fs');
+const fsPromises = fs.promises;
 
 describe('main', () => {
   describe('getRecentMedia', () => {
@@ -84,7 +85,7 @@ describe('main', () => {
 
       it('writes the Instagram API response JSON to a "media.json" file', async () => {
         expect(fs.promises.writeFile).toHaveBeenCalledWith(
-          'media.json',
+          main.MEDIA_FILE,
           JSON.stringify(recentMediaJson.data)
         );
       });
@@ -114,7 +115,6 @@ describe('main', () => {
   });
 
   describe('saveRecentMedia', () => {
-    const fsPromises = fs.promises;
     const data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
     const id = '1';
     const mediaUrl = 'http://foo.com/bar.jpg';
@@ -144,7 +144,7 @@ describe('main', () => {
     };
 
     beforeEach(async () => {
-      await fsPromises.writeFile('media.json', JSON.stringify([{
+      await fsPromises.writeFile(main.MEDIA_FILE, JSON.stringify([{
         media_url: mediaUrl,
         id: id,
       }]));
@@ -158,7 +158,7 @@ describe('main', () => {
       });
 
       afterEach(async () => {
-        await fsPromises.unlink('media.json');
+        await fsPromises.unlink(main.MEDIA_FILE);
       });
 
       afterAll(() => server.close());
@@ -182,7 +182,7 @@ describe('main', () => {
       });
 
       afterEach(async () => {
-        await fsPromises.unlink('media.json');
+        await fsPromises.unlink(main.MEDIA_FILE);
         await fsPromises.unlink(`${id}.jpg`);
       });
 
@@ -194,6 +194,32 @@ describe('main', () => {
         } catch(error) {
           expect(error.message).toEqual(`Request failed with status code ${status}`);
         }
+      });
+    });
+  });
+
+  describe('addGitHubUrlsToMediaJson', () => {
+    beforeEach(async () => {
+      await fsPromises.writeFile(main.MEDIA_FILE, JSON.stringify([{
+        media_url: 'https://foo',
+        id: '1'
+      }, {
+        media_url: 'https://bar',
+        id: '1'
+      }]));
+    });
+
+    afterEach(async () => {
+      await fsPromises.unlink(main.MEDIA_FILE);
+    });
+
+    it('adds the correct "github_media_url" property to each item in the "media.json" file', async () => {
+      await main.addGitHubUrlsToMediaJson();
+
+      const media = await fsPromises.readFile(main.MEDIA_FILE);
+
+      JSON.parse(media).forEach(m => {
+        expect(m.github_media_url).toEqual(`https://mdb.github.io/ig-feed/ig/${m.id}.jpg`);
       });
     });
   });
