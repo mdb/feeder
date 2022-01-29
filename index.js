@@ -84,7 +84,7 @@ const downloadFile = async (url, id) => {
     await saveRecentMedia();
     await addGitHubUrlsToMediaJson();
   } catch(error) {
-    console.error(message);
+    console.error(error);
     process.exit(1);
   }
 })();
