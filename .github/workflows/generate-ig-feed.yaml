@@ -1,6 +1,7 @@
 name: generate-ig-feed
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
