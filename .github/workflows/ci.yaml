@@ -9,9 +9,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version-file: .nvmrc
       - name: npm-install
         run: |
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.PERSONAL_ACCESS_TOKEN }}" >> .npmrc
