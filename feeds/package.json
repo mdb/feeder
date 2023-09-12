@@ -1,0 +1,22 @@
+{
+  "name": "ig-feed",
+  "version": "0.0.3",
+  "description": "Recent Instagram posts",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --verbose",
+    "start": "node index.js",
+    "gh-contributions": "node fetch-github-contributions.js"
+  },
+  "author": "Mike Ball",
+  "license": "MIT",
+  "dependencies": {
+    "@saulhardman/refresh-instagram-access-token": "^0.1.9",
+    "axios": ">=1.3.5"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "msw": "^1.2.1",
+    "octokit": "^3.1.0"
+  }
+}
