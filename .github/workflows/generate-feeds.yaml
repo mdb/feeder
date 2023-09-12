@@ -1,4 +1,4 @@
-name: generate-ig-feed
+name: generate-feeds
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
     - cron: 0 0 * * *
 
 jobs:
-  generate-feed:
+  generate-feeds:
     runs-on: ubuntu-latest
     name: generate-feed
     steps:
@@ -24,21 +24,24 @@ jobs:
           npm install
       - name: test
         run: npm test
-      - name: fetch-feed
-        id: feed
+      - name: fetch-ig-feed
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
         run: npm start
-      - name: upload-feed
+      - name: fetch-gh-contributions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run gh-contributions
+      - name: upload-feeds
         uses: actions/upload-artifact@v2
         with:
-          name: ig
+          name: feeds
           path: |
-            media.json
+            *.json
             *.jpg
           retention-days: 1
 
-  publish-feed-to-gh-pages:
+  publish-feeds-to-gh-pages:
     needs: generate-feed
     runs-on: ubuntu-latest
     steps:
@@ -48,9 +51,9 @@ jobs:
       - name: download-feed
         uses: actions/download-artifact@v2
         with:
-          name: ig
-          path: ig
-      - name: publish-feed-to-gh-pages
+          name: feeds
+          path: feeds
+      - name: publish-feeds-to-gh-pages
         uses: mikeal/publish-to-github-action@923d6a6f64c943c0f82f81180c4a84d8e0edaa3e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
