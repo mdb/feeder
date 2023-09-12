@@ -23,12 +23,16 @@ jobs:
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
         run: npm start
-      - name: upload-artifacts
+      - name: fetch-gh-contributions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run gh-contributions
+      - name: upload-feeds
         uses: actions/upload-artifact@v2
         with:
-          name: ig-pr
+          name: pr-feeds
           path: |
-            media.json
+            *.json
             *.jpg
           retention-days: 1
 
@@ -39,9 +43,11 @@ jobs:
       - name: download-artifact
         uses: actions/download-artifact@v2
         with:
-          name: ig-pr
-          path: ig-pr
+          name: pr-feeds
+          path: pr-feeds
       - name: ensure-json
-        run: cat ig-pr/media.json
+        run: |
+          cat pr-feeds/media.json
+          cat pr-feeds/github-contributions.json
       - name: ensure-images
-        run: ls ig-pr | grep '.jpg'
+        run: ls pr-feeds | grep '.jpg'
