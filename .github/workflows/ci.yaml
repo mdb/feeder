@@ -22,7 +22,7 @@ jobs:
         id: feed
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-        run: npm start
+        run: npm run ig-media
       - name: fetch-gh-contributions
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -32,7 +32,8 @@ jobs:
         with:
           name: pr-feeds
           path: |
-            *.json
+            github-contributions.json
+            instagram-media.json
             *.jpg
           retention-days: 1
 
@@ -47,7 +48,7 @@ jobs:
           path: pr-feeds
       - name: ensure-json
         run: |
-          cat pr-feeds/media.json
+          cat pr-feeds/instagram-media.json
           cat pr-feeds/github-contributions.json
       - name: ensure-images
         run: ls pr-feeds | grep '.jpg'

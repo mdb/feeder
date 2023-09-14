@@ -24,10 +24,10 @@ jobs:
           npm install
       - name: test
         run: npm test
-      - name: fetch-ig-feed
+      - name: fetch-ig-media
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-        run: npm start
+        run: npm run ig-media
       - name: fetch-gh-contributions
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -37,7 +37,8 @@ jobs:
         with:
           name: feeds
           path: |
-            *.json
+            github-contributions.json
+            instagram-media.json
             *.jpg
           retention-days: 1
 
