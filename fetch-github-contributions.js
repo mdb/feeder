@@ -36,7 +36,16 @@ contribution = (repositoryUrl) => {
   }
 };
 
-getPaginatedData()
-  .then(data => {
+(async () => {
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
+
+  try {
+    const data = await getPaginatedData();
     fs.writeFileSync('github-contributions.json', JSON.stringify(data));
-  });
+  } catch(error) {
+    console.error(error);
+    process.exit(1);
+  }
+})();
