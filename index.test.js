@@ -219,7 +219,7 @@ describe('main', () => {
       const media = await fsPromises.readFile(main.MEDIA_FILE);
 
       JSON.parse(media).forEach(m => {
-        expect(m.github_media_url).toEqual(`https://mdb.github.io/feeds/${m.id}.jpg`);
+        expect(m.github_media_url).toEqual(`https://mdb.github.io/ig-feed/feeds/${m.id}.jpg`);
       });
     });
   });

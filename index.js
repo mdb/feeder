@@ -50,7 +50,7 @@ const addGitHubUrlsToMediaJson = async () => {
     const media = await fsPromises.readFile(MEDIA_FILE);
     const newMedia = JSON.parse(media).map(m => {
       // the IG API formats JSON properties in snake case
-      m.github_media_url = `https://mdb.github.io/feeds/${m.id}.jpg`;
+      m.github_media_url = `https://mdb.github.io/ig-feed/feeds/${m.id}.jpg`;
 
       return m;
     });
