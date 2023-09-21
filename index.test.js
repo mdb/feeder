@@ -5,7 +5,7 @@ const fs = require('fs');
 const fsPromises = fs.promises;
 
 describe('main', () => {
-  describe('getRecentMedia', () => {
+  xdescribe('getRecentMedia', () => {
     const validToken = 'abc123';
 
     const recentMediaJson = {

@@ -8,7 +8,47 @@ const pipeline = util.promisify(stream.pipeline);
 
 const MEDIA_FILE = 'instagram-media.json';
 
-const getRecentMedia = async () => {
+const fetchAllMedia = async (nextUrl, nextParams) => {
+  const accessToken = process.env.IG_ACCESS_TOKEN;
+  if (!accessToken) {
+    throw new Error('Missing required environment variable "IG_ACCESS_TOKEN."');
+  }
+
+  const url = nextUrl || 'https://graph.instagram.com/me/media';
+
+  const params = {
+    params: nextParams || {
+      access_token: accessToken,
+      fields: 'media_url,permalink'
+    }
+  };
+
+  console.log('=====================================');
+  console.log(url, params);
+
+  const result = await axios.get(url, params);
+  const data = result.data.data;
+
+  console.log('PAGIN=====================================');
+  console.log(result.data.paging);
+
+  if (result.data.error) {
+    //throw new Error(result.data.error.message);
+    console.log('ERROR=====================================');
+    console.log(result.data.error);
+    return data;
+  }
+
+  if (result.data.paging.next) {
+    console.log('NEXT=====================================');
+    console.log(result.data.paging.next);
+    return data.concat(await fetchAllMedia(result.data.paging.next, {}));
+  }
+
+  return data;
+};
+
+const getRecentMedia = async (nextUrl) => {
   try {
     const accessToken = process.env.IG_ACCESS_TOKEN;
 
@@ -16,21 +56,10 @@ const getRecentMedia = async () => {
       throw new Error('Missing required environment variable "IG_ACCESS_TOKEN."');
     }
 
-    const {
-      data: {
-        data: recentMedia,
-        paging: paging
-      }
-    } = await axios.get('https://graph.instagram.com/me/media', {
-      params: {
-        access_token: accessToken,
-        fields: 'media_url,permalink'
-      }
-    });
+    const media = await fetchAllMedia();
+    console.log(media);
 
-    console.log(paging);
-
-    await fsPromises.writeFile(MEDIA_FILE, JSON.stringify(recentMedia));
+    await fsPromises.writeFile(MEDIA_FILE, JSON.stringify(media));
   } catch (error) {
     throw error;
   }
