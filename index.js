@@ -18,7 +18,8 @@ const getRecentMedia = async () => {
 
     const {
       data: {
-        data: recentMedia
+        data: recentMedia,
+        paging: paging
       }
     } = await axios.get('https://graph.instagram.com/me/media', {
       params: {
@@ -26,6 +27,8 @@ const getRecentMedia = async () => {
         fields: 'media_url,permalink'
       }
     });
+
+    console.log(paging);
 
     await fsPromises.writeFile(MEDIA_FILE, JSON.stringify(recentMedia));
   } catch (error) {
