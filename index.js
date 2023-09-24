@@ -23,25 +23,10 @@ const fetchAllMedia = async (nextUrl, nextParams) => {
     }
   };
 
-  console.log('=====================================');
-  console.log(url, params);
-
   const result = await axios.get(url, params);
   const data = result.data.data;
 
-  console.log('PAGIN=====================================');
-  console.log(result.data.paging);
-
-  if (result.data.error) {
-    //throw new Error(result.data.error.message);
-    console.log('ERROR=====================================');
-    console.log(result.data.error);
-    return data;
-  }
-
   if (result.data.paging.next) {
-    console.log('NEXT=====================================');
-    console.log(result.data.paging.next);
     return data.concat(await fetchAllMedia(result.data.paging.next, {}));
   }
 
