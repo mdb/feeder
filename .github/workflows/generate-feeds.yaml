@@ -39,6 +39,7 @@ jobs:
           path: |
             github-contributions.json
             instagram-media.json
+            instagram-media-*.json
             *.jpg
           retention-days: 1
 

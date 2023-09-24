@@ -8,7 +8,7 @@ const pipeline = util.promisify(stream.pipeline);
 
 const MEDIA_FILE = 'instagram-media.json';
 
-const fetchAllMedia = async (nextUrl, nextParams) => {
+const fetchAllMediaPages = async (nextUrl, nextParams, nextPageIndex) => {
   const accessToken = process.env.IG_ACCESS_TOKEN;
 
   if (!accessToken) {
@@ -24,40 +24,49 @@ const fetchAllMedia = async (nextUrl, nextParams) => {
     }
   };
 
+  const page = nextPageIndex || 0;
   const result = await axios.get(url, params);
-  const data = result.data.data;
+  const data = result.data;
 
-  if (result.data.paging.next) {
-    return data.concat(await fetchAllMedia(result.data.paging.next, {}));
+  await Promise.all(data.data.map(async (m, i) => {
+    data.data[i].github_media_url = `https://mdb.github.io/feeder/feeds/${m.id}.jpg`;
+
+    return downloadFile(m.media_url, m.id);
+  }));
+
+  const fileName = `instagram-media-${page}.json`;
+  if (data.paging.next) {
+    data.paging.next_gh_url = `https://mdb.github.io/feeder/feeds/instagram-media-${page + 1}.json`;
   }
 
-  return data;
-};
+  await fsPromises.writeFile(fileName, JSON.stringify(data));
 
-const getRecentMedia = async (nextUrl) => {
-  const media = await fetchAllMedia();
-
-  await fsPromises.writeFile(MEDIA_FILE, JSON.stringify(media));
+  if (data.paging.next) {
+    await fetchAllMediaPages(result.data.paging.next, {}, page + 1)
+  }
 };
 
 const saveRecentMedia = async () => {
   const media = await fsPromises.readFile(MEDIA_FILE);
 
-  await Promise.all(JSON.parse(media).map(async (m) => {
+  await Promise.all(JSON.parse(media).data.map(async (m) => {
     return downloadFile(m.media_url, m.id);
   }));
 };
 
 const addGitHubUrlsToMediaJson = async () => {
   const media = await fsPromises.readFile(MEDIA_FILE);
-  const newMedia = JSON.parse(media).map(m => {
+  const newMedia = JSON.parse(media).data.map(m => {
     // the IG API formats JSON properties in snake case
     m.github_media_url = `https://mdb.github.io/feeder/feeds/${m.id}.jpg`;
 
     return m;
   });
 
-  await fsPromises.writeFile(MEDIA_FILE, JSON.stringify(newMedia));
+  await fsPromises.writeFile(MEDIA_FILE, JSON.stringify({
+    data: newMedia,
+    paging: media.paging
+  }));
 };
 
 const downloadFile = async (url, id) => {
@@ -75,16 +84,14 @@ const downloadFile = async (url, id) => {
   }
 
   try {
-    await getRecentMedia();
-    await saveRecentMedia();
-    await addGitHubUrlsToMediaJson();
+    await fetchAllMediaPages();
   } catch(error) {
     console.error(error);
     process.exit(1);
   }
 })();
 
-module.exports.getRecentMedia = getRecentMedia;
+module.exports.fetchAllMediaPages = fetchAllMediaPages;
 module.exports.saveRecentMedia = saveRecentMedia;
 module.exports.addGitHubUrlsToMediaJson = addGitHubUrlsToMediaJson;
 module.exports.MEDIA_FILE = MEDIA_FILE;

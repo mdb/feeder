@@ -144,10 +144,12 @@ describe('main', () => {
     };
 
     beforeEach(async () => {
-      await fsPromises.writeFile(main.MEDIA_FILE, JSON.stringify([{
-        media_url: mediaUrl,
-        id: id,
-      }]));
+      await fsPromises.writeFile(main.MEDIA_FILE, JSON.stringify({
+        data: [{
+          media_url: mediaUrl,
+          id: id,
+        }]
+      }));
     });
 
     describe('when the upstream server experiencing no errors serving the images', () => {
@@ -200,13 +202,19 @@ describe('main', () => {
 
   describe('addGitHubUrlsToMediaJson', () => {
     beforeEach(async () => {
-      await fsPromises.writeFile(main.MEDIA_FILE, JSON.stringify([{
-        media_url: 'https://foo',
-        id: '1'
-      }, {
-        media_url: 'https://bar',
-        id: '1'
-      }]));
+      await fsPromises.writeFile(main.MEDIA_FILE, JSON.stringify({
+        data: [{
+          media_url: 'https://foo',
+          id: '1'
+        }, {
+          media_url: 'https://bar',
+          id: '1'
+        }],
+        paging: {
+          next: 'https://next',
+          next_gh_url: 'https://next'
+        }
+      }));
     });
 
     afterEach(async () => {
@@ -218,7 +226,7 @@ describe('main', () => {
 
       const media = await fsPromises.readFile(main.MEDIA_FILE);
 
-      JSON.parse(media).forEach(m => {
+      JSON.parse(media).data.forEach(m => {
         expect(m.github_media_url).toEqual(`https://mdb.github.io/feeder/feeds/${m.id}.jpg`);
       });
     });
