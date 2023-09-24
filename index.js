@@ -10,6 +10,7 @@ const MEDIA_FILE = 'instagram-media.json';
 
 const fetchAllMedia = async (nextUrl, nextParams) => {
   const accessToken = process.env.IG_ACCESS_TOKEN;
+
   if (!accessToken) {
     throw new Error('Missing required environment variable "IG_ACCESS_TOKEN."');
   }
@@ -34,61 +35,38 @@ const fetchAllMedia = async (nextUrl, nextParams) => {
 };
 
 const getRecentMedia = async (nextUrl) => {
-  try {
-    const accessToken = process.env.IG_ACCESS_TOKEN;
+  const media = await fetchAllMedia();
 
-    if (!accessToken) {
-      throw new Error('Missing required environment variable "IG_ACCESS_TOKEN."');
-    }
-
-    const media = await fetchAllMedia();
-    console.log(media);
-
-    await fsPromises.writeFile(MEDIA_FILE, JSON.stringify(media));
-  } catch (error) {
-    throw error;
-  }
+  await fsPromises.writeFile(MEDIA_FILE, JSON.stringify(media));
 };
 
 const saveRecentMedia = async () => {
-  try {
-    const media = await fsPromises.readFile(MEDIA_FILE);
+  const media = await fsPromises.readFile(MEDIA_FILE);
 
-    await Promise.all(JSON.parse(media).map(async (m) => {
-      return downloadFile(m.media_url, m.id);
-    }));
-  } catch(error) {
-    throw error;
-  }
+  await Promise.all(JSON.parse(media).map(async (m) => {
+    return downloadFile(m.media_url, m.id);
+  }));
 };
 
 const addGitHubUrlsToMediaJson = async () => {
-  try {
-    const media = await fsPromises.readFile(MEDIA_FILE);
-    const newMedia = JSON.parse(media).map(m => {
-      // the IG API formats JSON properties in snake case
-      m.github_media_url = `https://mdb.github.io/feeder/feeds/${m.id}.jpg`;
+  const media = await fsPromises.readFile(MEDIA_FILE);
+  const newMedia = JSON.parse(media).map(m => {
+    // the IG API formats JSON properties in snake case
+    m.github_media_url = `https://mdb.github.io/feeder/feeds/${m.id}.jpg`;
 
-      return m;
-    });
+    return m;
+  });
 
-    await fsPromises.writeFile(MEDIA_FILE, JSON.stringify(newMedia));
-  } catch(error) {
-    throw error;
-  }
+  await fsPromises.writeFile(MEDIA_FILE, JSON.stringify(newMedia));
 };
 
 const downloadFile = async (url, id) => {
-  try {
-    const mediaFile = await axios({
-      url: url,
-      responseType: 'stream'
-    });
+  const mediaFile = await axios({
+    url: url,
+    responseType: 'stream'
+  });
 
-    await pipeline(mediaFile.data, fs.createWriteStream(path.join(__dirname, `${id}.jpg`)));
-  } catch(error) {
-    throw error;
-  }
+  await pipeline(mediaFile.data, fs.createWriteStream(path.join(__dirname, `${id}.jpg`)));
 };
 
 (async () => {
