@@ -7,6 +7,7 @@ const stream = require('stream');
 const pipeline = util.promisify(stream.pipeline);
 
 const MEDIA_FILE = 'instagram-media.json';
+const igApiUrl = 'https://graph.instagram.com/me/media';
 
 const fetchAllMediaPages = async (nextUrl, nextParams, nextPageIndex) => {
   const accessToken = process.env.IG_ACCESS_TOKEN;
@@ -15,7 +16,7 @@ const fetchAllMediaPages = async (nextUrl, nextParams, nextPageIndex) => {
     throw new Error('Missing required environment variable "IG_ACCESS_TOKEN."');
   }
 
-  const url = nextUrl || 'https://graph.instagram.com/me/media';
+  const url = nextUrl || igApiUrl;
 
   const params = {
     params: nextParams || {
@@ -31,18 +32,21 @@ const fetchAllMediaPages = async (nextUrl, nextParams, nextPageIndex) => {
   await Promise.all(data.data.map(async (m, i) => {
     data.data[i].github_media_url = `https://mdb.github.io/feeder/feeds/${m.id}.jpg`;
 
-    return downloadFile(m.media_url, m.id);
+    return thisModule.downloadFile(m.media_url, m.id);
   }));
 
   const fileName = `instagram-media-${page}.json`;
-  if (data.paging.next) {
-    data.paging.next_gh_url = `https://mdb.github.io/feeder/feeds/instagram-media-${page + 1}.json`;
+  const igNext = data.paging.next;
+  if (igNext) {
+    // overwrite IG next URL with GH next URL, as the IG next URL contains the
+    // access token.
+    data.paging.next = `https://mdb.github.io/feeder/feeds/instagram-media-${page + 1}.json`;
   }
 
   await fsPromises.writeFile(fileName, JSON.stringify(data));
 
-  if (data.paging.next) {
-    await fetchAllMediaPages(result.data.paging.next, {}, page + 1)
+  if (igNext) {
+    await fetchAllMediaPages(igNext, {}, page + 1)
   }
 };
 
@@ -91,7 +95,6 @@ const downloadFile = async (url, id) => {
   }
 })();
 
-module.exports.fetchAllMediaPages = fetchAllMediaPages;
-module.exports.saveRecentMedia = saveRecentMedia;
-module.exports.addGitHubUrlsToMediaJson = addGitHubUrlsToMediaJson;
-module.exports.MEDIA_FILE = MEDIA_FILE;
+const thisModule = { igApiUrl, fetchAllMediaPages, saveRecentMedia, downloadFile, addGitHubUrlsToMediaJson, MEDIA_FILE };
+
+module.exports = thisModule;
