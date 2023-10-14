@@ -34,6 +34,7 @@ jobs:
           path: |
             github-contributions.json
             instagram-media.json
+            instagram-media-*.json
             *.jpg
           retention-days: 1
 
@@ -48,7 +49,8 @@ jobs:
           path: pr-feeds
       - name: ensure-json
         run: |
-          cat pr-feeds/instagram-media.json
-          cat pr-feeds/github-contributions.json
+          ls pr-feeds | grep '.json'
+          cat pr-feeds/instagram-media-0.json | jq
+          cat pr-feeds/github-contributions.json | jq
       - name: ensure-images
         run: ls pr-feeds | grep '.jpg'

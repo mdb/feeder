@@ -7,71 +7,79 @@ const stream = require('stream');
 const pipeline = util.promisify(stream.pipeline);
 
 const MEDIA_FILE = 'instagram-media.json';
+const igApiUrl = 'https://graph.instagram.com/me/media';
 
-const getRecentMedia = async () => {
-  try {
-    const accessToken = process.env.IG_ACCESS_TOKEN;
+const fetchAllMediaPages = async (nextUrl, nextParams, nextPageIndex) => {
+  const accessToken = process.env.IG_ACCESS_TOKEN;
 
-    if (!accessToken) {
-      throw new Error('Missing required environment variable "IG_ACCESS_TOKEN."');
+  if (!accessToken) {
+    throw new Error('Missing required environment variable "IG_ACCESS_TOKEN."');
+  }
+
+  const url = nextUrl || igApiUrl;
+
+  const params = {
+    params: nextParams || {
+      access_token: accessToken,
+      fields: 'media_url,permalink'
     }
+  };
 
-    const {
-      data: {
-        data: recentMedia
-      }
-    } = await axios.get('https://graph.instagram.com/me/media', {
-      params: {
-        access_token: accessToken,
-        fields: 'media_url,permalink'
-      }
-    });
+  const page = nextPageIndex || 0;
+  const result = await axios.get(url, params);
+  const data = result.data;
 
-    await fsPromises.writeFile(MEDIA_FILE, JSON.stringify(recentMedia));
-  } catch (error) {
-    throw error;
+  await Promise.all(data.data.map(async (m, i) => {
+    data.data[i].github_media_url = `https://mdb.github.io/feeder/feeds/${m.id}.jpg`;
+
+    return thisModule.downloadFile(m.media_url, m.id);
+  }));
+
+  const fileName = `instagram-media-${page}.json`;
+  const igNext = data.paging.next;
+  if (igNext) {
+    // overwrite IG next URL with GH next URL, as the IG next URL contains the
+    // access token.
+    data.paging.next = `https://mdb.github.io/feeder/feeds/instagram-media-${page + 1}.json`;
+  }
+
+  await fsPromises.writeFile(fileName, JSON.stringify(data));
+
+  if (igNext) {
+    await fetchAllMediaPages(igNext, {}, page + 1)
   }
 };
 
 const saveRecentMedia = async () => {
-  try {
-    const media = await fsPromises.readFile(MEDIA_FILE);
+  const media = await fsPromises.readFile(MEDIA_FILE);
 
-    await Promise.all(JSON.parse(media).map(async (m) => {
-      return downloadFile(m.media_url, m.id);
-    }));
-  } catch(error) {
-    throw error;
-  }
+  await Promise.all(JSON.parse(media).data.map(async (m) => {
+    return downloadFile(m.media_url, m.id);
+  }));
 };
 
 const addGitHubUrlsToMediaJson = async () => {
-  try {
-    const media = await fsPromises.readFile(MEDIA_FILE);
-    const newMedia = JSON.parse(media).map(m => {
-      // the IG API formats JSON properties in snake case
-      m.github_media_url = `https://mdb.github.io/feeder/feeds/${m.id}.jpg`;
+  const media = await fsPromises.readFile(MEDIA_FILE);
+  const newMedia = JSON.parse(media).data.map(m => {
+    // the IG API formats JSON properties in snake case
+    m.github_media_url = `https://mdb.github.io/feeder/feeds/${m.id}.jpg`;
 
-      return m;
-    });
+    return m;
+  });
 
-    await fsPromises.writeFile(MEDIA_FILE, JSON.stringify(newMedia));
-  } catch(error) {
-    throw error;
-  }
+  await fsPromises.writeFile(MEDIA_FILE, JSON.stringify({
+    data: newMedia,
+    paging: media.paging
+  }));
 };
 
 const downloadFile = async (url, id) => {
-  try {
-    const mediaFile = await axios({
-      url: url,
-      responseType: 'stream'
-    });
+  const mediaFile = await axios({
+    url: url,
+    responseType: 'stream'
+  });
 
-    await pipeline(mediaFile.data, fs.createWriteStream(path.join(__dirname, `${id}.jpg`)));
-  } catch(error) {
-    throw error;
-  }
+  await pipeline(mediaFile.data, fs.createWriteStream(path.join(__dirname, `${id}.jpg`)));
 };
 
 (async () => {
@@ -80,16 +88,13 @@ const downloadFile = async (url, id) => {
   }
 
   try {
-    await getRecentMedia();
-    await saveRecentMedia();
-    await addGitHubUrlsToMediaJson();
+    await fetchAllMediaPages();
   } catch(error) {
     console.error(error);
     process.exit(1);
   }
 })();
 
-module.exports.getRecentMedia = getRecentMedia;
-module.exports.saveRecentMedia = saveRecentMedia;
-module.exports.addGitHubUrlsToMediaJson = addGitHubUrlsToMediaJson;
-module.exports.MEDIA_FILE = MEDIA_FILE;
+const thisModule = { igApiUrl, fetchAllMediaPages, saveRecentMedia, downloadFile, addGitHubUrlsToMediaJson, MEDIA_FILE };
+
+module.exports = thisModule;
