@@ -37,11 +37,13 @@ const fetchAllMediaPages = async (nextUrl, nextParams, nextPageIndex) => {
 
   const fileName = `instagram-media-${page}.json`;
   const igNext = data.paging.next;
+
+  // Delete the previous field; the IG previous URL contains an access token.
+  delete data.paging.previous;
   if (igNext) {
-    // overwrite IG next URL with GH next URL, as the IG next URL contains the
+    // Overwrite the next URL with GH next URL; the IG next URL contains an
     // access token.
     data.paging.next = `https://mdb.github.io/feeder/feeds/instagram-media-${page + 1}.json`;
-    delete data.paging.previous;
   }
 
   await fsPromises.writeFile(fileName, JSON.stringify(data));
