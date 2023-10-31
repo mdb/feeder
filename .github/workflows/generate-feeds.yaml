@@ -33,7 +33,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run gh-contributions
       - name: upload-feeds
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: feeds
           path: |
@@ -51,7 +51,7 @@ jobs:
         with:
           ref: gh-pages
       - name: download-feed
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: feeds
           path: feeds
