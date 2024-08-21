@@ -48,7 +48,7 @@ const fetchAllMediaPages = async (nextUrl, nextParams, nextPageIndex) => {
 
   await fsPromises.writeFile(fileName, JSON.stringify(data));
 
-  if (igNext && igNext.includes('https://')) {
+  if (igNext) {
     await fetchAllMediaPages(igNext, {}, page + 1)
   }
 };
