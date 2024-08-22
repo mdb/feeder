@@ -77,6 +77,10 @@ const addGitHubUrlsToMediaJson = async () => {
 };
 
 const downloadFile = async (url, id) => {
+  if (!url) {
+    return Promise.resolve();
+  }
+
   const mediaFile = await axios({
     url: url,
     responseType: 'stream'
