@@ -10,7 +10,7 @@ getPaginatedData = async (url) => {
     per_page: 100,
   });
 
-  return Object.groupBy(items, ({ repository_url }) => repository_url);
+  return Object.groupBy(items, ({ repository_url }) => contribution(repository_url).repo);
 }
 
 parseData = (items) => {
