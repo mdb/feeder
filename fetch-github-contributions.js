@@ -4,15 +4,13 @@ const octokit = new Octokit({
   auth: process.env.GH_TOKEN,
 });
 
-async function getPaginatedData(url) {
-  const response = await octokit.paginate('GET /search/issues', {
+getPaginatedData = async (url) => {
+  const items = await octokit.paginate('GET /search/issues', {
     q: 'is:pr+is:public+author:mdb+-user:mdb',
     per_page: 100,
   });
 
-  const parsedData = parseData(response)
-
-  return parsedData;
+  return Object.groupBy(items, ({ repository_url }) => repository_url);
 }
 
 parseData = (items) => {
