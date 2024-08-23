@@ -5,6 +5,12 @@ const octokit = new Octokit({
 });
 
 getPaginatedData = async (url) => {
+  // NOTE: This includes open PRs and non-merged closed PRs.
+  // To view non-open PRs, add: state:closed
+  // Merged PRs have a 'merged_at' field. However, some PRs may be closed (and
+  // thereby have no merged_at), despite that their commits have been cherry
+  // picked/merged via other PRs.
+  // For example: https://github.com/incident-io/terraform-provider-incident/pull/78
   const items = await octokit.paginate('GET /search/issues', {
     q: 'is:pr+is:public+author:mdb+-user:mdb',
     per_page: 100,
