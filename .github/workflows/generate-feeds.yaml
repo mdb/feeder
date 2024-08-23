@@ -14,8 +14,8 @@ jobs:
     name: generate-feed
     steps:
       - name: checkout
-        uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
       - name: npm-install
@@ -47,11 +47,11 @@ jobs:
     needs: generate-feeds
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: gh-pages
       - name: download-feed
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: feeds
           path: feeds
