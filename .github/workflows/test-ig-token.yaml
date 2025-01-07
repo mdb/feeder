@@ -10,9 +10,10 @@ jobs:
     steps:
       - name: Test token
         env:
+          # https://developers.facebook.com/apps/8529230027180923/instagram-business/API-Setup/
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
         run: |
           curl \
             --verbose \
             --location \
-            "https://graph.instagram.com/me/media?fields=media_url,permalink&access_token=$IG_ACCESS_TOKEN"
+            "https://graph.instagram.com/v21.0/28395689843380207/media?fields=media_url,permalink&access_token=$IG_ACCESS_TOKEN"
