@@ -21,11 +21,17 @@ jobs:
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.PERSONAL_ACCESS_TOKEN }}" >> .npmrc
           npm install
       - name: refresh-ig-access-token
+        if: env.REFRESH_IG_TOKEN == 'true'
+        env:
+          REFRESH_IG_TOKEN: false
         id: instagram
         uses: ./node_modules/@saulhardman/refresh-instagram-access-token
         with:
           access_token: ${{ secrets.IG_ACCESS_TOKEN }}
       - name: update-gh-secret
+        if: env.REFRESH_IG_TOKEN == 'true'
+        env:
+          REFRESH_IG_TOKEN: false
         uses: hmanzur/actions-set-secret@v2.0.0
         with:
           name: IG_ACCESS_TOKEN
