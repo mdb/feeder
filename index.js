@@ -7,7 +7,7 @@ const stream = require('stream');
 const pipeline = util.promisify(stream.pipeline);
 
 const MEDIA_FILE = 'instagram-media.json';
-const igApiUrl = 'https://graph.instagram.com/me/media';
+const igApiUrl = 'https://graph.instagram.com/v21.0/28395689843380207/media';
 
 const fetchAllMediaPages = async (nextUrl, nextParams, nextPageIndex) => {
   const accessToken = process.env.IG_ACCESS_TOKEN;
@@ -96,7 +96,7 @@ const downloadFile = async (url, id) => {
 
   try {
     await fetchAllMediaPages();
-  } catch(error) {
+  } catch (error) {
     console.error(error);
     process.exit(1);
   }
