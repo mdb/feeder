@@ -3,7 +3,7 @@
 # feeder
 
 Use [GitHub Actions](https://github.com/mdb/feeder/actions/workflows/generate-feeds.yaml) to collect
-data from disparate HTTP APIs; used GitHub pages to serve the data at `https://mdb.github.io/feeder`
+data from disparate HTTP APIs; use GitHub pages to serve the data at `https://mdb.github.io/feeder`
 JSON endpoints used by `mikeball.info`.
 
 ## Endpoints
