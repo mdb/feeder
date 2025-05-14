@@ -21,7 +21,7 @@ const fetchAllMediaPages = async (nextUrl, nextParams, nextPageIndex) => {
   const params = {
     params: nextParams || {
       access_token: accessToken,
-      fields: 'media_url,permalink'
+      fields: 'media_url,caption,permalink'
     }
   };
 

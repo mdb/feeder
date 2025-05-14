@@ -14,10 +14,11 @@ describe('main', () => {
       data: [{
         media_url: 'http://media_url',
         permalink: 'http://permalink',
+        caption: 'caption',
         id: '1'
       }],
       paging: {
-        next: `${igApiUrlTwo}?fields=media_url,permalink&access_token=${validToken}`
+        next: `${igApiUrlTwo}?fields=media_url,caption,permalink&access_token=${validToken}`
       }
     };
 
@@ -25,6 +26,7 @@ describe('main', () => {
       data: [{
         media_url: 'http://media_url_2',
         permalink: 'http://permalink_2',
+        caption: 'caption_2',
         id: '2'
       }],
       paging: {}
@@ -84,7 +86,7 @@ describe('main', () => {
               );
             }
 
-            if (!fields.includes('media_url') || !fields.includes('permalink')) {
+            if (!fields.includes('media_url') || !fields.includes('permalink') || !fields.includes('caption')) {
               return res(
                 ctx.status(500),
                 ctx.json({
@@ -154,7 +156,7 @@ describe('main', () => {
       it('errors with an informative message', async () => {
         try {
           await main.fetchAllMediaPages();
-        } catch(error) {
+        } catch (error) {
           expect(error.message).toEqual('Missing required environment variable "IG_ACCESS_TOKEN."');
         }
       });
@@ -166,7 +168,7 @@ describe('main', () => {
 
         try {
           await main.fetchAllMediaPages();
-        } catch(error) {
+        } catch (error) {
           expect(error.message).toEqual('Request failed with status code 400');
         }
       });
@@ -252,7 +254,7 @@ describe('main', () => {
       it('throws an error', async () => {
         try {
           await main.saveRecentMedia();
-        } catch(error) {
+        } catch (error) {
           expect(error.message).toEqual(`Request failed with status code ${status}`);
         }
       });
