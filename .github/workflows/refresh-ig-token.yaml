@@ -11,7 +11,7 @@ on:
 jobs:
   refresh-token:
     runs-on: ubuntu-latest
-    name: refresh-token
+    name: refresh-ig-token
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -19,7 +19,8 @@ jobs:
           node-version-file: .nvmrc
       - name: npm-install
         run: npm install
-      - name: fetch-ig-media
+      - name: refresh-ig-token
+        id: refresh-ig-token
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
         run: npm run refresh-ig-token
@@ -27,5 +28,14 @@ jobs:
         uses: hmanzur/actions-set-secret@v2.0.0
         with:
           name: IG_ACCESS_TOKEN
-          value: ${{ steps.instagram.outputs.access_token }}
+          value: ${{ steps.refresh-ig-token.outputs.ig-access-token }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - name: test-updated-gh-secret
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: |
+          curl \
+            --verbose \
+            --location \
+            --fail-with-body \
+            "https://graph.instagram.com/v21.0/28395689843380207/media?fields=media_url,caption,permalink&access_token=$IG_ACCESS_TOKEN"
