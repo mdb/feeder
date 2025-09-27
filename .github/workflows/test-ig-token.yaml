@@ -16,4 +16,5 @@ jobs:
           curl \
             --verbose \
             --location \
+            --fail-with-body \
             "https://graph.instagram.com/v21.0/28395689843380207/media?fields=media_url,caption,permalink&access_token=$IG_ACCESS_TOKEN"
