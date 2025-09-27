@@ -1,7 +1,9 @@
-const msw = require('msw');
-const setupServer = require('msw/node').setupServer;
-const main = require('./index');
-const fs = require('fs');
+import { jest } from '@jest/globals'
+import * as msw from 'msw';
+import { setupServer } from 'msw/node';
+import * as fs from 'fs';
+import * as main from './index';
+
 const fsPromises = fs.promises;
 
 describe('main', () => {
@@ -34,7 +36,7 @@ describe('main', () => {
 
     const mockServer = () => {
       return setupServer(
-        msw.rest.get(
+        msw.http.get(
           igApiUrl,
           (req, res, ctx) => {
             const accessToken = req.url.searchParams.get('access_token');
@@ -67,7 +69,7 @@ describe('main', () => {
             return res(ctx.json(recentMediaJsonOne));
           }
         ),
-        msw.rest.get(
+        msw.http.get(
           igApiUrlTwo,
           (req, res, ctx) => {
             const accessToken = req.url.searchParams.get('access_token');
@@ -116,7 +118,7 @@ describe('main', () => {
 
     beforeEach(() => {
       jest.spyOn(fs.promises, 'writeFile').mockImplementation(jest.fn());
-      jest.spyOn(main, 'downloadFile').mockImplementation(jest.fn());
+      //jest.spyOn(main, 'downloadFile').mockImplementation(jest.fn());
     });
 
     afterEach(() => {
@@ -126,9 +128,7 @@ describe('main', () => {
       delete process.env.IG_ACCESS_TOKEN;
     });
 
-    afterAll(() => {
-      server.close();
-    });
+    afterAll(() => server.close());
 
     describe('when a valid IG_ACCESS_TOKEN environment variable is provided', () => {
       beforeEach(async () => {
@@ -184,7 +184,7 @@ describe('main', () => {
       status = status || 200;
 
       return setupServer(
-        msw.rest.get(
+        msw.http.get(
           url,
           (_, res, ctx) => {
             const buffer = Buffer.from(data, 'base64');
@@ -214,6 +214,8 @@ describe('main', () => {
     });
 
     describe('when the upstream server experiencing no errors serving the images', () => {
+      let server;
+
       beforeEach(async () => {
         server = mockServer(mediaUrl);
 
@@ -237,6 +239,7 @@ describe('main', () => {
 
     describe('when the upstream server returns an error serving the images', () => {
       const status = 404;
+      let server;
 
       beforeEach(async () => {
         server = mockServer(mediaUrl, status);
