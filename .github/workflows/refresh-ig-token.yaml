@@ -1,6 +1,7 @@
 name: refresh-ig-access-token
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -17,21 +18,12 @@ jobs:
         with:
           node-version-file: .nvmrc
       - name: npm-install
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.PERSONAL_ACCESS_TOKEN }}" >> .npmrc
-          npm install
-      - name: refresh-ig-access-token
-        if: env.REFRESH_IG_TOKEN == 'true'
+        run: npm install
+      - name: fetch-ig-media
         env:
-          REFRESH_IG_TOKEN: false
-        id: instagram
-        uses: ./node_modules/@saulhardman/refresh-instagram-access-token
-        with:
-          access_token: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: npm run refresh-ig-token
       - name: update-gh-secret
-        if: env.REFRESH_IG_TOKEN == 'true'
-        env:
-          REFRESH_IG_TOKEN: false
         uses: hmanzur/actions-set-secret@v2.0.0
         with:
           name: IG_ACCESS_TOKEN
