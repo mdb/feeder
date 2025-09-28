@@ -1,7 +1,7 @@
 import * as axios from 'axios';
 import * as core from '@actions/core';
 
-refreshIgToken = async () => {
+const refreshIgToken = async () => {
   const result = await axios({
     url: 'https://graph.instagram.com/refresh_access_token',
     params: {
