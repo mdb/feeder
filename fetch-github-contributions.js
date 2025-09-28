@@ -4,7 +4,7 @@ const octokit = new Octokit({
   auth: process.env.GH_TOKEN,
 });
 
-getPaginatedData = async () => {
+const getPaginatedData = async () => {
   // NOTE: This includes open PRs and non-merged closed PRs.
   // To view non-open PRs, add: state:closed
   // Merged PRs have a 'merged_at' field. However, some PRs may be closed (and
@@ -19,7 +19,7 @@ getPaginatedData = async () => {
   return Object.groupBy(items, ({ repository_url }) => repoName(repository_url));
 }
 
-repoName = (repositoryUrl) => {
+const repoName = (repositoryUrl) => {
   const url = new URL(repositoryUrl);
 
   return url.pathname.split('/').slice(2, 4).join('/');
