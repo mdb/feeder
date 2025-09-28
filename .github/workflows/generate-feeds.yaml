@@ -19,9 +19,7 @@ jobs:
         with:
           node-version-file: .nvmrc
       - name: npm-install
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.PERSONAL_ACCESS_TOKEN }}" >> .npmrc
-          npm install
+        run: npm install
       - name: test
         run: npm test
       - name: fetch-ig-media
