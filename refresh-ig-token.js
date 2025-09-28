@@ -1,5 +1,5 @@
-const axios = require('axios');
-const core = require('@actions/core');
+import * as axios from 'axios';
+import * as core from '@actions/core';
 
 refreshIgToken = async () => {
   const result = await axios({
