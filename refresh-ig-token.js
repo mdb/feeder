@@ -1,4 +1,4 @@
-import * as axios from 'axios';
+import axios from 'axios';
 import * as core from '@actions/core';
 
 const refreshIgToken = async () => {
