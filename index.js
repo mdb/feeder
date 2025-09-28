@@ -85,7 +85,7 @@ const downloadFile = async (url, id) => {
     responseType: 'stream'
   });
 
-  await pipeline(mediaFile.data, fs.createWriteStream(path.join(import.meta.dirname, `${id}.jpg`)));
+  await pipeline(mediaFile.data, fs.createWriteStream(path.join(import.meta.dirname || '', `${id}.jpg`)));
 };
 
 (async () => {

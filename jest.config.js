@@ -2,7 +2,8 @@ const config = {
   clearMocks: true,
   testEnvironment: 'node',
   moduleFileExtensions: ['js'],
-  verbose: true
+  verbose: true,
+  transform: {},
 };
 
 export default config;
