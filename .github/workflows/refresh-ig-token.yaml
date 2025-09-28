@@ -25,11 +25,9 @@ jobs:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
         run: npm run refresh-ig-token
       - name: update-gh-secret
-        uses: hmanzur/actions-set-secret@v2.0.0
-        with:
-          name: IG_ACCESS_TOKEN
-          value: ${{ steps.refresh-ig-token.outputs.ig-access-token }}
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: gh secret set IG_ACCESS_TOKEN --body "${{ steps.refresh-ig-token.outputs.ig-access-token }}"
       - name: test-updated-gh-secret
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
