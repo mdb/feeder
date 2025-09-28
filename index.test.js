@@ -1,12 +1,19 @@
-const msw = require('msw');
-const setupServer = require('msw/node').setupServer;
-const main = require('./index');
-const fs = require('fs');
+import { jest } from '@jest/globals'
+import { http, HttpResponse } from 'msw';
+import { setupServer } from 'msw/node';
+import * as fs from 'fs';
+import {
+  igApiUrl,
+  fetchAllMediaPages,
+  saveRecentMedia,
+  addGitHubUrlsToMediaJson,
+  MEDIA_FILE,
+} from './index';
+
 const fsPromises = fs.promises;
 
 describe('main', () => {
   describe('fetchAllMediaPages', () => {
-    const igApiUrl = main.igApiUrl;
     const igApiUrlTwo = `${igApiUrl}-2`;
     const validToken = 'abc123';
 
@@ -33,71 +40,80 @@ describe('main', () => {
     };
 
     const mockServer = () => {
+      const data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+      const mediaDownloadReqBody = Buffer.from(data, 'base64');
+
       return setupServer(
-        msw.rest.get(
+        http.get(
           igApiUrl,
-          (req, res, ctx) => {
-            const accessToken = req.url.searchParams.get('access_token');
-            const fields = req.url.searchParams.get('fields');
+          (req) => {
+            const url = new URL(req.request.url);
+            const accessToken = url.searchParams.get('access_token');
+            const fields = url.searchParams.get('fields');
 
             if (accessToken !== validToken && fields) {
-              return res(
-                ctx.status(400),
-                ctx.json({
-                  error: {
-                    message: 'Invalid OAuth access token',
-                    type: 'OAuthException',
-                    code: 190
-                  }
-                })
-              );
+              return new HttpResponse({
+                error: {
+                  message: 'Invalid OAuth access token',
+                  type: 'OAuthException',
+                  code: 190
+                }
+              }, { status: 400 });
             }
 
             if (!fields.includes('media_url') || !fields.includes('permalink')) {
-              return res(
-                ctx.status(500),
-                ctx.json({
-                  error: {
-                    message: 'Invalid fields'
-                  }
-                })
-              );
+              return new HttpResponse({
+                error: {
+                  message: 'Invalid fields'
+                }
+              }, { status: 500 });
             }
 
-            return res(ctx.json(recentMediaJsonOne));
+            return HttpResponse.json(recentMediaJsonOne);
           }
         ),
-        msw.rest.get(
+        http.get(
           igApiUrlTwo,
-          (req, res, ctx) => {
-            const accessToken = req.url.searchParams.get('access_token');
-            const fields = req.url.searchParams.get('fields');
+          (req) => {
+            const url = new URL(req.request.url);
+            const accessToken = url.searchParams.get('access_token');
+            const fields = url.searchParams.get('fields');
 
             if (accessToken !== validToken && fields) {
-              return res(
-                ctx.status(400),
-                ctx.json({
-                  error: {
-                    message: 'Invalid OAuth access token',
-                    type: 'OAuthException',
-                    code: 190
-                  }
-                })
-              );
+              return new HttpResponse({
+                error: {
+                  message: 'Invalid OAuth access token',
+                  type: 'OAuthException',
+                  code: 190
+                }
+              }, { status: 400 });
             }
 
             if (!fields.includes('media_url') || !fields.includes('permalink') || !fields.includes('caption')) {
-              return res(
-                ctx.status(500),
-                ctx.json({
-                  error: {
-                    message: 'Invalid fields'
-                  }
-                })
-              );
+              return new HttpResponse({
+                error: {
+                  message: 'Invalid fields'
+                }
+              }, { status: 500 });
             }
 
-            return res(ctx.json(recentMediaJsonTwo));
+            return HttpResponse.json(recentMediaJsonTwo);
+          }
+        ),
+        http.get(
+          recentMediaJsonOne.data[0].media_url,
+          () => {
+            return new HttpResponse(mediaDownloadReqBody, {
+              status: 200,
+            });
+          }
+        ),
+        http.get(
+          recentMediaJsonTwo.data[0].media_url,
+          () => {
+            return new HttpResponse(mediaDownloadReqBody, {
+              status: 200,
+            });
           }
         )
       );
@@ -106,17 +122,12 @@ describe('main', () => {
     let server;
 
     beforeAll(() => {
-      server = mockServer(
-        igApiUrl,
-        recentMediaJsonOne
-      );
-
+      server = mockServer();
       server.listen();
     });
 
     beforeEach(() => {
       jest.spyOn(fs.promises, 'writeFile').mockImplementation(jest.fn());
-      jest.spyOn(main, 'downloadFile').mockImplementation(jest.fn());
     });
 
     afterEach(() => {
@@ -126,22 +137,25 @@ describe('main', () => {
       delete process.env.IG_ACCESS_TOKEN;
     });
 
-    afterAll(() => {
-      server.close();
-    });
+    afterAll(() => server.close());
 
     describe('when a valid IG_ACCESS_TOKEN environment variable is provided', () => {
       beforeEach(async () => {
         process.env.IG_ACCESS_TOKEN = validToken;
-        await main.fetchAllMediaPages();
+        await fetchAllMediaPages();
+      });
+
+      afterEach(async () => {
+        await fsPromises.unlink('1.jpg');
+        await fsPromises.unlink('2.jpg');
       });
 
       it('writes the Instagram API response JSON to a "media.json" file', async () => {
-        mediaOne = recentMediaJsonOne;
+        const mediaOne = recentMediaJsonOne;
         mediaOne.data[0].github_media_url = 'https://mdb.github.io/feeder/feeds/1.jpg';
         mediaOne.paging.next = 'https://mdb.github.io/feeder/feeds/instagram-media-1.json';
 
-        mediaTwo = recentMediaJsonTwo;
+        const mediaTwo = recentMediaJsonTwo;
         mediaTwo.data[0].github_media_url = 'https://mdb.github.io/feeder/feeds/2.jpg';
         mediaTwo.paging = {};
 
@@ -155,7 +169,7 @@ describe('main', () => {
     describe('when no IG_ACCESS_TOKEN environment variable is provided', () => {
       it('errors with an informative message', async () => {
         try {
-          await main.fetchAllMediaPages();
+          await fetchAllMediaPages();
         } catch (error) {
           expect(error.message).toEqual('Missing required environment variable "IG_ACCESS_TOKEN."');
         }
@@ -167,7 +181,7 @@ describe('main', () => {
         process.env.IG_ACCESS_TOKEN = 'bad-token';
 
         try {
-          await main.fetchAllMediaPages();
+          await fetchAllMediaPages();
         } catch (error) {
           expect(error.message).toEqual('Request failed with status code 400');
         }
@@ -184,28 +198,26 @@ describe('main', () => {
       status = status || 200;
 
       return setupServer(
-        msw.rest.get(
+        http.get(
           url,
-          (_, res, ctx) => {
+          () => {
             const buffer = Buffer.from(data, 'base64');
+            const body = status === 200 ? buffer : {
+              error: {
+                message: `error: ${status}`
+              }
+            };
 
-            return res(
-              ctx.status(status),
-              ctx.set('Content-Length', buffer.byteLength.toString()),
-              ctx.set('Content-Type', 'image/jpeg'),
-              (status === 200 ? ctx.body(buffer) : ctx.json({
-                error: {
-                  message: `error: ${status}`
-                }
-              })),
-            );
+            return new HttpResponse(body, {
+              status,
+            });
           }
         )
       );
     };
 
     beforeEach(async () => {
-      await fsPromises.writeFile(main.MEDIA_FILE, JSON.stringify({
+      await fsPromises.writeFile(MEDIA_FILE, JSON.stringify({
         data: [{
           media_url: mediaUrl,
           id: id,
@@ -213,21 +225,23 @@ describe('main', () => {
       }));
     });
 
-    describe('when the upstream server experiencing no errors serving the images', () => {
+    describe('when the upstream server experiences no errors serving the images', () => {
+      let server;
+
       beforeEach(async () => {
         server = mockServer(mediaUrl);
-
         server.listen();
       });
 
       afterEach(async () => {
-        await fsPromises.unlink(main.MEDIA_FILE);
+        await fsPromises.unlink(MEDIA_FILE);
+        await fsPromises.unlink(`${id}.jpg`);
       });
 
       afterAll(() => server.close());
 
       it('downloads each the image whose URL is declared in the media.json file and saves it to a ${id}.jpg file', async () => {
-        await main.saveRecentMedia();
+        await saveRecentMedia();
 
         const contents = await fsPromises.readFile(`${id}.jpg`);
 
@@ -237,23 +251,22 @@ describe('main', () => {
 
     describe('when the upstream server returns an error serving the images', () => {
       const status = 404;
+      let server;
 
       beforeEach(async () => {
         server = mockServer(mediaUrl, status);
-
         server.listen();
       });
 
       afterEach(async () => {
-        await fsPromises.unlink(main.MEDIA_FILE);
-        await fsPromises.unlink(`${id}.jpg`);
+        await fsPromises.unlink(MEDIA_FILE);
       });
 
       afterAll(() => server.close());
 
       it('throws an error', async () => {
         try {
-          await main.saveRecentMedia();
+          await saveRecentMedia();
         } catch (error) {
           expect(error.message).toEqual(`Request failed with status code ${status}`);
         }
@@ -263,7 +276,7 @@ describe('main', () => {
 
   describe('addGitHubUrlsToMediaJson', () => {
     beforeEach(async () => {
-      await fsPromises.writeFile(main.MEDIA_FILE, JSON.stringify({
+      await fsPromises.writeFile(MEDIA_FILE, JSON.stringify({
         data: [{
           media_url: 'https://foo',
           id: '1'
@@ -279,13 +292,13 @@ describe('main', () => {
     });
 
     afterEach(async () => {
-      await fsPromises.unlink(main.MEDIA_FILE);
+      await fsPromises.unlink(MEDIA_FILE);
     });
 
     it('adds the correct "github_media_url" property to each item in the "media.json" file', async () => {
-      await main.addGitHubUrlsToMediaJson();
+      await addGitHubUrlsToMediaJson();
 
-      const media = await fsPromises.readFile(main.MEDIA_FILE);
+      const media = await fsPromises.readFile(MEDIA_FILE);
 
       JSON.parse(media).data.forEach(m => {
         expect(m.github_media_url).toEqual(`https://mdb.github.io/feeder/feeds/${m.id}.jpg`);

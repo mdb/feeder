@@ -1,9 +1,10 @@
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
+import axios from 'axios';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as util from 'util';
+import * as stream from 'stream';
+
 const fsPromises = fs.promises;
-const util = require('util');
-const stream = require('stream');
 const pipeline = util.promisify(stream.pipeline);
 
 const MEDIA_FILE = 'instagram-media.json';
@@ -18,21 +19,19 @@ const fetchAllMediaPages = async (nextUrl, nextParams, nextPageIndex) => {
 
   const url = nextUrl || igApiUrl;
 
-  const params = {
-    params: nextParams || {
-      access_token: accessToken,
-      fields: 'media_url,caption,permalink'
-    }
+  const params = nextParams || {
+    access_token: accessToken,
+    fields: 'media_url,caption,permalink'
   };
 
   const page = nextPageIndex || 0;
-  const result = await axios.get(url, params);
+  const result = await axios({ url, params });
   const data = result.data;
 
   await Promise.all(data.data.map(async (m, i) => {
     data.data[i].github_media_url = `https://mdb.github.io/feeder/feeds/${m.id}.jpg`;
 
-    return thisModule.downloadFile(m.media_url, m.id);
+    return downloadFile(m.media_url, m.id);
   }));
 
   const fileName = `instagram-media-${page}.json`;
@@ -86,7 +85,7 @@ const downloadFile = async (url, id) => {
     responseType: 'stream'
   });
 
-  await pipeline(mediaFile.data, fs.createWriteStream(path.join(__dirname, `${id}.jpg`)));
+  await pipeline(mediaFile.data, fs.createWriteStream(path.join(import.meta.dirname || '', `${id}.jpg`)));
 };
 
 (async () => {
@@ -102,6 +101,11 @@ const downloadFile = async (url, id) => {
   }
 })();
 
-const thisModule = { igApiUrl, fetchAllMediaPages, saveRecentMedia, downloadFile, addGitHubUrlsToMediaJson, MEDIA_FILE };
-
-module.exports = thisModule;
+export {
+  igApiUrl,
+  fetchAllMediaPages,
+  saveRecentMedia,
+  downloadFile,
+  addGitHubUrlsToMediaJson,
+  MEDIA_FILE,
+};
